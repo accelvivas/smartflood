@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Flood Detection & Prediction System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      transition: all 0.2s ease;
+    }
+    .card:hover {
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+    .kpi-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      transition: all 0.2s ease;
+    }
+    .kpi-card:hover {
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn-secondary {
+      background: white;
+      color: #4b5563;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background: #f9fafb;
+      border-color: #d1d5db;
+    }
+    .modal { display: none; }
+    .modal[aria-hidden="false"] { display: block; }
+    #map { height: 450px; border-radius: 12px; }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .status-low { background: #d1fae5; color: #065f46; }
+    .status-medium { background: #fed7aa; color: #92400e; }
+    .status-high { background: #fee2e2; color: #991b1b; }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #10b981 0%, #f59e0b 50%, #ef4444 100%);
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 2px solid #667eea;
+    }
+    .filter-panel {
+      position: sticky;
+      top: 84px;
+    }
+    .alert-item {
+      animation: slideIn 0.3s ease-out;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    select, input[type="date"], input[type="email"], input[type="tel"], input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    .icon-wrapper {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    /* Ensure modals overlay Leaflet map */
+    .modal { z-index: 2000 !important; }
+    .leaflet-container { z-index: 0 !important; }
+    .leaflet-pane, .leaflet-top, .leaflet-bottom { z-index: 0 !important; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100">
+  <div id="app" class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 glass shadow-sm">
+      <div class="max-w-[1600px] mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="icon-wrapper gradient-bg text-white">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Smart Flood Detection & Prediction
+              </h1>
+              <p class="text-xs text-gray-500 mt-0.5">National University – CCIT Capstone Project</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button id="btnAbout" class="btn-secondary text-sm">About</button>
+            <button id="btnTestAlert" class="btn-secondary text-sm">
+              <span class="inline-flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                Test Alert
+              </span>
+            </button>
+            <button id="btnSettings" class="btn-primary text-sm">
+              <span class="inline-flex items-center gap-2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M12 1v6m0 6v6M5.64 5.64l4.24 4.24m4.24 4.24l4.24 4.24M1 12h6m6 0h6M5.64 18.36l4.24-4.24m4.24-4.24l4.24-4.24"/>
+                </svg>
+                Settings
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-8">
+      <div class="max-w-[1600px] mx-auto px-6">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <!-- Sidebar Filters -->
+          <aside class="lg:col-span-1">
+            <div class="card p-6 filter-panel">
+              <h2 class="text-lg font-semibold mb-5 flex items-center gap-2">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                Filters
+              </h2>
+              
+              <div class="space-y-5">
+                <div>
+                  <label for="location" class="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                  <select id="location">
+                    <option value='{"name":"Manila","lat":14.5995,"lng":120.9842}'>Manila, NCR</option>
+                    <option value='{"name":"Quezon City","lat":14.6760,"lng":121.0437}'>Quezon City, NCR</option>
+                    <option value='{"name":"Cebu City","lat":10.3157,"lng":123.8854}'>Cebu City, Cebu</option>
+                    <option value='{"name":"Davao City","lat":7.1907,"lng":125.4553}'>Davao City, Davao del Sur</option>
+                    <option value='{"name":"Baguio","lat":16.4023,"lng":120.5960}'>Baguio, Benguet</option>
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">From</label>
+                    <input id="dateFrom" type="date" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">To</label>
+                    <input id="dateTo" type="date" />
+                  </div>
+                </div>
+
+                <div>
+                  <label for="riskThreshold" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Alert Threshold
+                    <span id="thresholdValue" class="float-right text-purple-600">60</span>
+                  </label>
+                  <input id="riskThreshold" type="range" min="0" max="100" value="60" class="w-full" />
+                  <div class="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>Low</span>
+                    <span>Medium</span>
+                    <span>High</span>
+                  </div>
+                </div>
+
+                <div class="pt-2 space-y-2">
+                  <button id="btnApply" class="btn-primary w-full">Apply Filters</button>
+                  <button id="btnReset" class="btn-secondary w-full">Reset</button>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <!-- Main Content Area -->
+          <section class="lg:col-span-4 space-y-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div class="kpi-card">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Current Risk</div>
+                    <div id="kpiRisk" class="text-3xl font-bold text-gray-900 mb-1">–</div>
+                    <div id="kpiRiskNote" class="text-xs text-gray-500">Calculating...</div>
+                  </div>
+                  <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">24h Rainfall</div>
+                    <div id="kpiRain" class="text-3xl font-bold text-gray-900 mb-1">–</div>
+                    <div class="text-xs text-gray-500">Millimeters</div>
+                  </div>
+                  <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Water Level</div>
+                    <div id="kpiWaterTrend" class="text-3xl font-bold text-gray-900 mb-1">–</div>
+                    <div class="text-xs text-gray-500">24h Trend</div>
+                  </div>
+                  <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center text-white">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                      <polyline points="7.5 4.21 12 6.81 16.5 4.21"/>
+                      <polyline points="7.5 19.79 7.5 14.6 3 12"/>
+                      <polyline points="21 12 16.5 14.6 16.5 19.79"/>
+                      <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                      <line x1="12" y1="22.08" x2="12" y2="12"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div class="kpi-card">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Active Alerts</div>
+                    <div id="kpiAlerts" class="text-3xl font-bold text-gray-900 mb-1">0</div>
+                    <div class="text-xs text-gray-500">Last 72 hours</div>
+                  </div>
+                  <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Map and Charts Row -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <!-- Map -->
+              <div class="card p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-semibold text-gray-900">Location Map</h3>
+                  <div class="text-xs text-gray-500" id="mapLocation">–</div>
+                </div>
+                <div id="map" class="shadow-inner"></div>
+              </div>
+
+              <!-- Charts -->
+              <div class="space-y-6">
+                <div class="card p-6">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Rainfall (24h)</h3>
+                    <span class="text-xs font-medium text-gray-500">Millimeters</span>
+                  </div>
+                  <canvas id="rainChart"></canvas>
+                </div>
+
+                <div class="card p-6">
+                  <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Water Level (24h)</h3>
+                    <span class="text-xs font-medium text-gray-500">Meters</span>
+                  </div>
+                  <canvas id="waterChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Prediction and Alerts Row -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <!-- Prediction Console -->
+              <div class="xl:col-span-2 card p-6">
+                <div class="flex items-center justify-between mb-5">
+                  <h3 class="text-lg font-semibold text-gray-900">Prediction Console</h3>
+                  <button id="btnRefresh" class="btn-secondary text-sm">
+                    <span class="inline-flex items-center gap-2">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <polyline points="1 20 1 14 7 14"/>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                      </svg>
+                      Refresh
+                    </span>
+                  </button>
+                </div>
+
+                <div class="grid sm:grid-cols-2 gap-6">
+                  <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-5">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Selected Location</div>
+                    <div id="predLocation" class="text-xl font-bold text-gray-900 mb-4">–</div>
+                    
+                    <div class="border-t border-gray-200 pt-4">
+                      <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">6-Hour Outlook</div>
+                      <div id="predOutlook" class="text-2xl font-bold mb-1">–</div>
+                      <div id="predConfidence" class="text-sm text-gray-600">–</div>
+                    </div>
+                  </div>
+
+                  <div class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-5">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Evacuation Guidance</div>
+                    <ul id="evacList" class="space-y-2"></ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Alerts Center -->
+              <div class="card p-6">
+                <div class="flex items-center justify-between mb-5">
+                  <h3 class="text-lg font-semibold text-gray-900">Alerts Center</h3>
+                  <span class="text-xs font-medium text-gray-500">Recent</span>
+                </div>
+                <div id="alertsList" class="space-y-3 max-h-96 overflow-auto"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-200 bg-white mt-auto">
+      <div class="max-w-[1600px] mx-auto px-6 py-5">
+        <div class="flex items-center justify-between text-sm">
+          <div class="text-gray-500">
+            <span class="font-semibold">Academic Prototype</span> • For demonstration purposes only
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <span id="status" class="text-gray-600 font-medium">System Ready</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="modalSettings" class="modal fixed inset-0 z-[2000] bg-black/40 backdrop-blur-sm" aria-hidden="true">
+    <div class="min-h-full flex items-center justify-center p-4">
+      <div class="card w-full max-w-lg p-8 animate-in">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-900">Settings</h3>
+          <button id="closeSettings" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-5">
+          <div>
+            <label for="notifEmail" class="block text-sm font-semibold text-gray-700 mb-2">Email for Alerts</label>
+            <input id="notifEmail" type="email" placeholder="you@example.com" />
+          </div>
+          <div>
+            <label for="notifPhone" class="block text-sm font-semibold text-gray-700 mb-2">Phone for SMS</label>
+            <input id="notifPhone" type="tel" placeholder="+63 9XX XXX XXXX" />
+          </div>
+          <div>
+            <label for="settingThreshold" class="block text-sm font-semibold text-gray-700 mb-2">Default Alert Threshold</label>
+            <input id="settingThreshold" type="number" min="0" max="100" step="1" />
+          </div>
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <p class="text-xs text-blue-800">
+              <strong>Note:</strong> Settings are stored locally in your browser for this prototype.
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex items-center justify-end gap-3">
+          <button id="cancelSettings" class="btn-secondary">Cancel</button>
+          <button id="saveSettings" class="btn-primary">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Modal -->
+  <div id="modalAbout" class="modal fixed inset-0 z-[2000] bg-black/40 backdrop-blur-sm" aria-hidden="true">
+    <div class="min-h-full flex items-center justify-center p-4">
+      <div class="card w-full max-w-3xl p-8 max-h-[85vh] overflow-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-900">About This Project</h3>
+          <button id="closeAbout" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-6 text-gray-700">
+          <div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Smart Flood Detection & Prediction System</h4>
+            <p class="text-sm leading-relaxed">
+              A Capstone Project submitted to the Faculty of National University – College of Computing and Information Technologies in partial fulfillment of the requirements for the degree Bachelor of Science in Information Technology with Specialization in Mobile and Web Application.
+            </p>
+          </div>
+
+          <div class="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-5 border border-purple-100">
+            <div class="grid sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <div class="font-semibold text-gray-900 mb-2">Project Team</div>
+                <ul class="space-y-1 text-gray-700">
+                  <li>• Alcantara, Kristian Diether</li>
+                  <li>• Hernandez, Gian Accel</li>
+                  <li>• Tan, Benedict James</li>
+                  <li>• Viray, Ranuel Glenn</li>
+                </ul>
+              </div>
+              <div>
+                <div class="font-semibold text-gray-900 mb-2">Project Details</div>
+                <ul class="space-y-1 text-gray-700">
+                  <li><strong>Adviser:</strong> Balmes, Irene</li>
+                  <li><strong>Date:</strong> September 2025</li>
+                  <li><strong>Institution:</strong> National University</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Project Overview</h4>
+            <p class="text-sm leading-relaxed">
+              This software prototype demonstrates localized flood risk visualization, predictive scoring algorithms, and alert notification systems using publicly available data concepts. The system features interactive mapping, real-time charts, risk assessment KPIs, an alerts management center, and configurable settings with local data persistence.
+            </p>
+          </div>
+
+          <div>
+            <h4 class="text-lg font-semibold text-gray-900 mb-2">Alignment with SDGs</h4>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">SDG 9: Industry & Innovation</span>
+              <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">SDG 11: Sustainable Cities</span>
+              <span class="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold">SDG 13: Climate Action</span>
+            </div>
+          </div>
+
+          <div class="border-t border-gray-200 pt-4">
+            <p class="text-xs text-gray-500">
+              For comprehensive documentation, literature references, and related systems analysis, please refer to the complete project documentation. This prototype emphasizes affordability, scalability, and real-world applicability for disaster risk reduction in the Philippines.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl bg-gray-900 text-white text-sm font-medium shadow-2xl hidden transform transition-all duration-300"></div>
+
+  <script>
+    const AppState = {
+      map: null,
+      rainChart: null,
+      waterChart: null,
+      markers: [],
+      alerts: [],
+      settings: { email: '', phone: '', threshold: 60 },
+      selected: { name: 'Manila', lat: 14.5995, lng: 120.9842 },
+      weather: [],
+      sensor: []
+    };
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      setTimeout(() => el.classList.add('hidden'), 3000);
+    }
+
+    function openModal(id) {
+      document.getElementById(id).setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    function saveSettings() {
+      const email = document.getElementById('notifEmail').value.trim();
+      const phone = document.getElementById('notifPhone').value.trim();
+      const threshold = parseInt(document.getElementById('settingThreshold').value || '60', 10);
+      AppState.settings = { email, phone, threshold };
+      localStorage.setItem('sf-settings', JSON.stringify(AppState.settings));
+      document.getElementById('riskThreshold').value = threshold;
+      document.getElementById('thresholdValue').textContent = threshold;
+      showToast('✓ Settings saved successfully');
+      closeModal('modalSettings');
+    }
+
+    function loadSettings() {
+      const raw = localStorage.getItem('sf-settings');
+      if (raw) {
+        try { AppState.settings = JSON.parse(raw); } catch(e) {}
+      }
+      document.getElementById('notifEmail').value = AppState.settings.email || '';
+      document.getElementById('notifPhone').value = AppState.settings.phone || '';
+      document.getElementById('settingThreshold').value = AppState.settings.threshold ?? 60;
+      document.getElementById('riskThreshold').value = AppState.settings.threshold ?? 60;
+      document.getElementById('thresholdValue').textContent = AppState.settings.threshold ?? 60;
+    }
+
+    async function loadWeatherData(loc) {
+      const now = dayjs();
+      const data = [];
+      for (let i = 23; i >= 0; i--) {
+        const t = now.subtract(i, 'hour');
+        const mm = Math.max(0, Math.round((Math.sin((i/24)*Math.PI*2 + 1) + Math.random()*0.6) * 8));
+        data.push({ time: t.toDate(), rainfall_mm: mm });
+      }
+      return data;
+    }
+
+    async function loadSensorData(loc) {
+      const now = dayjs();
+      const data = [];
+      let lvl = 1 + Math.random()*0.3;
+      for (let i = 23; i >= 0; i--) {
+        const t = now.subtract(i, 'hour');
+        lvl += (Math.random() - 0.45) * 0.05;
+        data.push({ time: t.toDate(), level_m: Math.max(0.2, parseFloat(lvl.toFixed(2))) });
+      }
+      return data;
+    }
+
+    function computeRisk(weather, sensor, settings) {
+      const rain24 = weather.reduce((a,b) => a + b.rainfall_mm, 0);
+      const wlStart = sensor[0]?.level_m ?? 0;
+      const wlEnd = sensor[sensor.length-1]?.level_m ?? 0;
+      const wlTrend = wlEnd - wlStart;
+      let score = 0;
+      score += Math.min(100, rain24 * 1.2);
+      score += Math.min(40, Math.max(0, wlTrend * 40));
+      score = Math.min(100, Math.round(score));
+      let label = 'Low';
+      if (score >= 70) label = 'High'; else if (score >= 40) label = 'Medium';
+      const confidence = Math.min(99, 60 + Math.round(Math.random()*35));
+      const alert = score >= (settings?.threshold ?? 60);
+      return { score, label, rain24, wlTrend: parseFloat(wlTrend.toFixed(2)), confidence, alert };
+    }
+
+    function colorForRisk(label) {
+      if (label === 'High') return '#ef4444';
+      if (label === 'Medium') return '#f59e0b';
+      return '#10b981';
+    }
+
+    function renderMap() {
+      if (!AppState.map) {
+        AppState.map = L.map('map').setView([12.8797, 121.7740], 5);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+          maxZoom: 19, 
+          attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>' 
+        }).addTo(AppState.map);
+      }
+      AppState.markers.forEach(m => AppState.map.removeLayer(m));
+      AppState.markers = [];
+      const loc = AppState.selected;
+      const marker = L.circleMarker([loc.lat, loc.lng], { 
+        radius: 12, 
+        color: '#667eea', 
+        fillColor: '#818cf8', 
+        fillOpacity: 0.8,
+        weight: 3
+      }).addTo(AppState.map);
+      marker.bindPopup(`<div style="text-align:center;padding:4px;"><strong>${loc.name}</strong><br/><small>${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}</small></div>`);
+      AppState.markers.push(marker);
+      document.getElementById('mapLocation').textContent = `${loc.name} • ${loc.lat.toFixed(4)}°N, ${loc.lng.toFixed(4)}°E`;
+      AppState.map.setView([loc.lat, loc.lng], 11);
+    }
+
+    function renderCharts() {
+      const labels = AppState.weather.map(d => dayjs(d.time).format('HH:mm'));
+      const rainData = AppState.weather.map(d => d.rainfall_mm);
+      const waterData = AppState.sensor.map(d => d.level_m);
+      
+      if (AppState.rainChart) AppState.rainChart.destroy();
+      if (AppState.waterChart) AppState.waterChart.destroy();
+      
+      const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            padding: 12,
+            cornerRadius: 8,
+            titleFont: { size: 13, weight: '600' },
+            bodyFont: { size: 12 }
+          }
+        },
+        scales: { 
+          y: { 
+            beginAtZero: true,
+            grid: { color: 'rgba(0, 0, 0, 0.05)' },
+            ticks: { font: { size: 11 } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { 
+              font: { size: 10 },
+              maxRotation: 0
+            }
+          }
+        }
+      };
+
+      AppState.rainChart = new Chart(document.getElementById('rainChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Rainfall (mm)',
+            data: rainData,
+            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+            borderColor: 'rgba(59, 130, 246, 1)',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: chartOptions
+      });
+
+      AppState.waterChart = new Chart(document.getElementById('waterChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Water Level (m)',
+            data: waterData,
+            borderColor: 'rgb(16, 185, 129)',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            tension: 0.4,
+            fill: true,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4
+          }]
+        },
+        options: chartOptions
+      });
+
+      const rain24 = AppState.weather.reduce((a,b)=>a+b.rainfall_mm,0);
+      document.getElementById('kpiRain').textContent = rain24.toFixed(0) + ' mm';
+      
+      const wlTrend = (AppState.sensor[AppState.sensor.length-1]?.level_m ?? 0) - (AppState.sensor[0]?.level_m ?? 0);
+      const trendIcon = wlTrend >= 0 ? '↑' : '↓';
+      document.getElementById('kpiWaterTrend').textContent = `${trendIcon} ${Math.abs(wlTrend).toFixed(2)} m`;
+      document.getElementById('kpiWaterTrend').style.color = wlTrend >= 0.1 ? '#ef4444' : wlTrend <= -0.1 ? '#10b981' : '#6b7280';
+    }
+
+    function updatePredictionUI(pred) {
+      const riskEl = document.getElementById('kpiRisk');
+      const statusClass = pred.label === 'High' ? 'status-high' : pred.label === 'Medium' ? 'status-medium' : 'status-low';
+      riskEl.innerHTML = `<span class="status-badge ${statusClass}">${pred.label}</span><span class="text-lg ml-2">${pred.score}/100</span>`;
+      
+      document.getElementById('kpiRiskNote').textContent = `Rain: ${pred.rain24.toFixed(0)}mm • Water: ${pred.wlTrend >= 0 ? '+' : ''}${pred.wlTrend}m`;
+      document.getElementById('predLocation').textContent = AppState.selected.name;
+      document.getElementById('predOutlook').textContent = `${pred.label} Risk`;
+      document.getElementById('predOutlook').style.color = colorForRisk(pred.label);
+      document.getElementById('predConfidence').textContent = `Confidence: ${pred.confidence}%`;
+      
+      if (pred.alert) {
+        const msg = `${dayjs().format('MMM D, YYYY HH:mm')} • ${AppState.selected.name}: ${pred.label} flood risk detected (Score: ${pred.score})`;
+        AppState.alerts.unshift({ id: Date.now(), msg, level: pred.label });
+        if (AppState.alerts.length > 20) AppState.alerts.pop();
+        renderAlerts();
+      }
+    }
+
+    function renderAlerts() {
+      const list = document.getElementById('alertsList');
+      list.innerHTML = '';
+      
+      if (AppState.alerts.length === 0) {
+        list.innerHTML = '<div class="text-center py-8 text-gray-400"><svg class="w-12 h-12 mx-auto mb-2 opacity-50" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><div class="text-sm">No alerts yet</div></div>';
+        return;
+      }
+      
+      AppState.alerts.forEach(a => {
+        const el = document.createElement('div');
+        el.className = 'alert-item bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-3 text-sm flex items-start gap-3';
+        const icon = '<svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+        el.innerHTML = `${icon}<div class="flex-1 text-gray-700">${a.msg}</div>`;
+        list.appendChild(el);
+      });
+      
+      document.getElementById('kpiAlerts').textContent = AppState.alerts.length.toString();
+    }
+
+    function getSelectedLocation() {
+      const raw = document.getElementById('location').value;
+      try { return JSON.parse(raw); } catch(e) { return AppState.selected; }
+    }
+
+    async function updateUI() {
+      document.getElementById('status').innerHTML = '<span class="inline-flex items-center gap-2"><svg class="animate-spin w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M4 12a8 8 0 018-8" stroke-opacity="0.75"/></svg>Updating...</span>';
+      
+      AppState.selected = getSelectedLocation();
+      const [weather, sensor] = await Promise.all([
+        loadWeatherData(AppState.selected),
+        loadSensorData(AppState.selected)
+      ]);
+      
+      AppState.weather = weather;
+      AppState.sensor = sensor;
+      renderMap();
+      renderCharts();
+      
+      const pred = computeRisk(weather, sensor, AppState.settings);
+      updatePredictionUI(pred);
+      
+      document.getElementById('status').innerHTML = '<span class="inline-flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div>Updated</span>';
+    }
+
+    function sendTestAlert() {
+      const msg = `${dayjs().format('MMM D, YYYY HH:mm')} • TEST ALERT for ${AppState.selected.name}: This is a prototype demonstration alert.`;
+      AppState.alerts.unshift({ id: Date.now(), msg, level: 'Medium' });
+      renderAlerts();
+      showToast('✓ Test alert sent successfully');
+    }
+
+    function getEvacuationSuggestions(name) {
+      const samples = {
+        'Manila': ['Move to Barangay Hall via Taft Avenue northbound', 'Evacuation Center: Rizal Memorial Sports Complex'],
+        'Quezon City': ['Use Commonwealth Ave service road to elevated areas', 'Evacuation Center: Quezon Memorial Circle'],
+        'Cebu City': ['Avoid riverbanks; proceed via Osmeña Blvd to Fuente', 'Evacuation Center: Cebu City Sports Center'],
+        'Davao City': ['Move away from Davao River; head to San Pedro Street', 'Evacuation Center: Almendras Gymnasium'],
+        'Baguio': ['Avoid low-lying areas; move towards Session Road', 'Evacuation Center: Baguio Convention Center']
+      };
+      return samples[name] || ['Proceed to designated evacuation center', 'Avoid crossing flooded roads and waterways'];
+    }
+
+    function updateEvacList() {
+      const ul = document.getElementById('evacList');
+      ul.innerHTML = '';
+      getEvacuationSuggestions(AppState.selected.name).forEach((t, i) => {
+        const li = document.createElement('li');
+        li.className = 'flex items-start gap-2 text-sm text-gray-700';
+        li.innerHTML = `<svg class="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>${t}</span>`;
+        ul.appendChild(li);
+      });
+    }
+
+    function bindUI() {
+      document.getElementById('btnSettings').addEventListener('click', () => openModal('modalSettings'));
+      document.getElementById('closeSettings').addEventListener('click', () => closeModal('modalSettings'));
+      document.getElementById('cancelSettings').addEventListener('click', () => closeModal('modalSettings'));
+      document.getElementById('saveSettings').addEventListener('click', saveSettings);
+      
+      document.getElementById('btnAbout').addEventListener('click', () => openModal('modalAbout'));
+      document.getElementById('closeAbout').addEventListener('click', () => closeModal('modalAbout'));
+      
+      document.getElementById('btnTestAlert').addEventListener('click', sendTestAlert);
+      document.getElementById('btnApply').addEventListener('click', () => { updateEvacList(); updateUI(); showToast('✓ Filters applied'); });
+      document.getElementById('btnReset').addEventListener('click', () => { 
+        loadSettings(); 
+        updateEvacList(); 
+        updateUI(); 
+        showToast('✓ Filters reset');
+      });
+      document.getElementById('btnRefresh').addEventListener('click', () => { updateEvacList(); updateUI(); showToast('✓ Data refreshed'); });
+      
+      document.getElementById('riskThreshold').addEventListener('input', (e) => { 
+        const val = parseInt(e.target.value, 10);
+        document.getElementById('thresholdValue').textContent = val;
+        AppState.settings.threshold = val;
+        localStorage.setItem('sf-settings', JSON.stringify(AppState.settings));
+      });
+      
+      document.getElementById('location').addEventListener('change', () => { updateEvacList(); updateUI(); });
+      
+      document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeModal(modal.id);
+        });
+      });
+    }
+
+    async function init() {
+      loadSettings();
+      bindUI();
+      updateEvacList();
+      await updateUI();
+      showToast('✓ System initialized');
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
