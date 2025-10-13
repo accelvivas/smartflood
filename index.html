@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Smart Flood Detection & Prediction System</title>
+  <link rel="icon" href="images/logo.png" type="image/png" />
+  <link rel="shortcut icon" href="images/logo.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -14,6 +16,13 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
   <style>
+    :root {
+      --brand-navy: #0B4A8B;
+      --brand-blue: #1E64B7;
+      --brand-cyan: #22A6F2;
+      --brand-green: #7DB34D;
+      --brand-bg: rgba(255,255,255,0.95);
+    }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; }
     body { 
@@ -35,10 +44,10 @@
       z-index: 0;
     }
     .gradient-bg {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-navy) 100%);
     }
     .glass {
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--brand-bg);
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.3);
     }
@@ -49,6 +58,9 @@
       border: 1px solid rgba(0, 0, 0, 0.06);
       transition: all 0.2s ease;
     }
+    /* Brand palette application */
+    .btn-primary { background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-navy) 100%); color: #fff; }
+    .btn-primary:hover { filter: brightness(0.95); }
     .card:hover {
       box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
       transform: translateY(-2px);
@@ -151,8 +163,8 @@
       box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
     .icon-wrapper {
-      width: 48px;
-      height: 48px;
+      width: 56px;
+      height: 56px;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -175,13 +187,11 @@
       <div class="max-w-[1600px] mx-auto px-6 py-4">
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-4">
-            <div class="icon-wrapper gradient-bg text-white">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-              </svg>
+            <div class="icon-wrapper bg-white overflow-hidden shadow-sm">
+              <img src="images/logo.png" alt="Smart Flood" class="w-10 h-10 object-contain" />
             </div>
             <div>
-              <h1 class="text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              <h1 class="text-xl font-bold bg-gradient-to-r from-[var(--brand-blue)] to-[var(--brand-navy)] bg-clip-text text-transparent">
                 Smart Flood Detection & Prediction
               </h1>
               <p class="text-xs text-gray-500 mt-0.5">National University – CCIT Capstone Project</p>
@@ -1018,7 +1028,7 @@
       getEvacuationSuggestions(AppState.selected.name).forEach((t, i) => {
         const li = document.createElement('li');
         li.className = 'flex items-start gap-2 text-sm text-gray-700';
-        li.innerHTML = `<svg class="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>${t}</span>`;
+        li.innerHTML = `<svg class="w-4 h-4 text-[var(--brand-blue)] flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span>${t}</span>`;
         ul.appendChild(li);
       });
     }
