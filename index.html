@@ -269,7 +269,7 @@
 
                 <div class="flex items-center justify-between">
                   <label for="toggleSensors" class="text-sm font-semibold text-gray-700">Show Sensors</label>
-                  <input id="toggleSensors" type="checkbox" class="h-4 w-4" />
+                  <input id="toggleSensors" type="checkbox" class="h-4 w-4" checked />
                 </div>
 
                 <div class="pt-2 space-y-2">
@@ -759,10 +759,14 @@
       if (!AppState.map) return;
       AppState.sensorMarkers.forEach(m => AppState.map.removeLayer(m));
       AppState.sensorMarkers = [];
-      document.getElementById('sensorList').innerHTML = '';
-      if (!show) return;
+      const sensorListEl = document.getElementById('sensorList');
+      sensorListEl.innerHTML = '';
+      if (!show) {
+        sensorListEl.innerHTML = '<div class="text-sm text-gray-500">Sensors are hidden. Toggle "Show Sensors" to display markers and status.</div>';
+        return;
+      }
       AppState.sensors = getMockSensorsFor(AppState.selected);
-      const list = document.getElementById('sensorList');
+      const list = sensorListEl;
       AppState.sensors.forEach(s => {
         const color = s.status === 'ok' ? '#10b981' : s.status === 'warn' ? '#f59e0b' : '#9ca3af';
         const marker = L.circleMarker([s.lat, s.lng], { radius: 7, color, fillColor: color, fillOpacity: 0.9, weight: 2 })
