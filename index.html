@@ -10,6 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
   <style>
@@ -19,6 +20,19 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      background: transparent;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
+        url('https://cdn.hswstatic.com/gif/shutterstock-2505947173.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: 0;
     }
     .gradient-bg {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -150,9 +164,11 @@
     .modal { z-index: 2000 !important; }
     .leaflet-container { z-index: 0 !important; }
     .leaflet-pane, .leaflet-top, .leaflet-bottom { z-index: 0 !important; }
+    /* Ensure app content sits above background */
+    #app { position: relative; z-index: 1; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100">
+<body>
   <div id="app" class="min-h-screen flex flex-col">
     <!-- Header -->
     <header class="sticky top-0 z-30 glass shadow-sm">
@@ -244,6 +260,16 @@
                     <span>Medium</span>
                     <span>High</span>
                   </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <label for="toggleHeatmap" class="text-sm font-semibold text-gray-700">Risk Heatmap</label>
+                  <input id="toggleHeatmap" type="checkbox" class="h-4 w-4" />
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <label for="toggleSensors" class="text-sm font-semibold text-gray-700">Show Sensors</label>
+                  <input id="toggleSensors" type="checkbox" class="h-4 w-4" />
                 </div>
 
                 <div class="pt-2 space-y-2">
@@ -399,9 +425,48 @@
               <div class="card p-6">
                 <div class="flex items-center justify-between mb-5">
                   <h3 class="text-lg font-semibold text-gray-900">Alerts Center</h3>
-                  <span class="text-xs font-medium text-gray-500">Recent</span>
+                  <div class="flex items-center gap-2">
+                    <button id="btnExportAlerts" class="btn-secondary text-xs">Export CSV</button>
+                    <span class="text-xs font-medium text-gray-500">Recent</span>
+                  </div>
                 </div>
                 <div id="alertsList" class="space-y-3 max-h-96 overflow-auto"></div>
+              </div>
+            </div>
+
+            <!-- Incident Log Row -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+              <div class="xl:col-span-2 card p-6">
+                <div class="flex items-center justify-between mb-5">
+                  <h3 class="text-lg font-semibold text-gray-900">Community Incident Log</h3>
+                  <button id="btnExportIncidents" class="btn-secondary text-xs">Export CSV</button>
+                </div>
+                <form id="incidentForm" class="grid sm:grid-cols-3 gap-4 mb-5">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Date/Time</label>
+                    <input id="incidentTime" type="datetime-local" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Severity</label>
+                    <select id="incidentSeverity">
+                      <option>Low</option>
+                      <option>Medium</option>
+                      <option>High</option>
+                    </select>
+                  </div>
+                  <div class="sm:col-span-3">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Notes</label>
+                    <input id="incidentNotes" type="text" placeholder="Brief description (e.g., knee-deep in Barangay 123)" />
+                  </div>
+                  <div class="sm:col-span-3 flex items-center justify-end">
+                    <button type="submit" class="btn-primary">Add Incident</button>
+                  </div>
+                </form>
+                <div id="incidentsList" class="space-y-3 max-h-96 overflow-auto"></div>
+              </div>
+              <div class="card p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Sensors</h3>
+                <div id="sensorList" class="space-y-2 text-sm text-gray-700"></div>
               </div>
             </div>
           </section>
@@ -451,6 +516,14 @@
           <div>
             <label for="settingThreshold" class="block text-sm font-semibold text-gray-700 mb-2">Default Alert Threshold</label>
             <input id="settingThreshold" type="number" min="0" max="100" step="1" />
+          </div>
+          <div>
+            <label for="apiBase" class="block text-sm font-semibold text-gray-700 mb-2">API Base URL (optional)</label>
+            <input id="apiBase" type="text" placeholder="https://your-backend.example.com/api" />
+          </div>
+          <div>
+            <label for="apiKey" class="block text-sm font-semibold text-gray-700 mb-2">API Key / Token (optional)</label>
+            <input id="apiKey" type="text" placeholder="Bearer token or API key" />
           </div>
           <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p class="text-xs text-blue-800">
@@ -546,8 +619,13 @@
       rainChart: null,
       waterChart: null,
       markers: [],
+      sensorMarkers: [],
+      sensors: [],
       alerts: [],
-      settings: { email: '', phone: '', threshold: 60 },
+      heatLayer: null,
+      legendControl: null,
+      lastPred: null,
+      settings: { email: '', phone: '', threshold: 60, apiBase: '', apiKey: '' },
       selected: { name: 'Manila', lat: 14.5995, lng: 120.9842 },
       weather: [],
       sensor: []
@@ -574,7 +652,9 @@
       const email = document.getElementById('notifEmail').value.trim();
       const phone = document.getElementById('notifPhone').value.trim();
       const threshold = parseInt(document.getElementById('settingThreshold').value || '60', 10);
-      AppState.settings = { email, phone, threshold };
+      const apiBase = document.getElementById('apiBase').value.trim();
+      const apiKey = document.getElementById('apiKey').value.trim();
+      AppState.settings = { email, phone, threshold, apiBase, apiKey };
       localStorage.setItem('sf-settings', JSON.stringify(AppState.settings));
       document.getElementById('riskThreshold').value = threshold;
       document.getElementById('thresholdValue').textContent = threshold;
@@ -592,6 +672,8 @@
       document.getElementById('settingThreshold').value = AppState.settings.threshold ?? 60;
       document.getElementById('riskThreshold').value = AppState.settings.threshold ?? 60;
       document.getElementById('thresholdValue').textContent = AppState.settings.threshold ?? 60;
+      document.getElementById('apiBase').value = AppState.settings.apiBase || '';
+      document.getElementById('apiKey').value = AppState.settings.apiKey || '';
     }
 
     async function loadWeatherData(loc) {
@@ -661,6 +743,75 @@
       AppState.markers.push(marker);
       document.getElementById('mapLocation').textContent = `${loc.name} • ${loc.lat.toFixed(4)}°N, ${loc.lng.toFixed(4)}°E`;
       AppState.map.setView([loc.lat, loc.lng], 11);
+    }
+
+    function getMockSensorsFor(loc) {
+      const baseId = loc.name.replace(/\s+/g, '-').toUpperCase();
+      return [
+        { id: `${baseId}-01`, name: `${loc.name} Sensor 1`, lat: loc.lat + 0.01, lng: loc.lng + 0.015, status: 'ok', level_m: 1.12 },
+        { id: `${baseId}-02`, name: `${loc.name} Sensor 2`, lat: loc.lat - 0.012, lng: loc.lng - 0.018, status: 'warn', level_m: 1.45 },
+        { id: `${baseId}-03`, name: `${loc.name} Sensor 3`, lat: loc.lat + 0.02, lng: loc.lng - 0.01, status: 'off', level_m: null },
+      ];
+    }
+
+    function renderSensorMarkers() {
+      const show = document.getElementById('toggleSensors')?.checked;
+      if (!AppState.map) return;
+      AppState.sensorMarkers.forEach(m => AppState.map.removeLayer(m));
+      AppState.sensorMarkers = [];
+      document.getElementById('sensorList').innerHTML = '';
+      if (!show) return;
+      AppState.sensors = getMockSensorsFor(AppState.selected);
+      const list = document.getElementById('sensorList');
+      AppState.sensors.forEach(s => {
+        const color = s.status === 'ok' ? '#10b981' : s.status === 'warn' ? '#f59e0b' : '#9ca3af';
+        const marker = L.circleMarker([s.lat, s.lng], { radius: 7, color, fillColor: color, fillOpacity: 0.9, weight: 2 })
+          .addTo(AppState.map);
+        marker.bindPopup(`<strong>${s.name}</strong><br/>Status: ${s.status}${s.level_m ? `<br/>Level: ${s.level_m} m` : ''}`);
+        AppState.sensorMarkers.push(marker);
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between rounded border border-gray-200 p-2';
+        row.innerHTML = `<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full" style="background:${color}"></span>${s.name}</div><div class="text-xs text-gray-500">${s.status}${s.level_m ? ` • ${s.level_m} m` : ''}</div>`;
+        list.appendChild(row);
+      });
+    }
+
+    function renderHeatmap(pred) {
+      const show = document.getElementById('toggleHeatmap')?.checked;
+      if (!AppState.map) return;
+      if (AppState.heatLayer) {
+        AppState.map.removeLayer(AppState.heatLayer);
+        AppState.heatLayer = null;
+      }
+      if (!show) {
+        if (AppState.legendControl) {
+          AppState.map.removeControl(AppState.legendControl);
+          AppState.legendControl = null;
+        }
+        return;
+      }
+      const base = AppState.selected;
+      const intensity = Math.max(0.2, Math.min(1, (pred?.score ?? 50) / 100));
+      const points = [
+        [base.lat, base.lng, intensity],
+        [base.lat + 0.02, base.lng + 0.02, intensity * 0.8],
+        [base.lat - 0.02, base.lng - 0.02, intensity * 0.7],
+        [base.lat + 0.03, base.lng - 0.015, intensity * 0.6],
+        [base.lat - 0.025, base.lng + 0.025, intensity * 0.5],
+      ];
+      AppState.heatLayer = L.heatLayer(points, { radius: 28, blur: 22, maxZoom: 17, minOpacity: 0.3 }).addTo(AppState.map);
+      if (!AppState.legendControl) {
+        AppState.legendControl = L.control({ position: 'bottomright' });
+        AppState.legendControl.onAdd = function() {
+          const div = L.DomUtil.create('div', 'card p-3');
+          div.innerHTML = '<div class="text-xs font-semibold text-gray-700 mb-2">Risk Legend</div>' +
+            '<div class="flex items-center gap-2 text-xs"><span class="w-3 h-3 rounded-full" style="background:#10b981"></span><span>Low</span></div>' +
+            '<div class="flex items-center gap-2 text-xs"><span class="w-3 h-3 rounded-full" style="background:#f59e0b"></span><span>Medium</span></div>' +
+            '<div class="flex items-center gap-2 text-xs"><span class="w-3 h-3 rounded-full" style="background:#ef4444"></span><span>High</span></div>';
+          return div;
+        };
+      }
+      AppState.legendControl.addTo(AppState.map);
     }
 
     function renderCharts() {
@@ -762,6 +913,9 @@
         if (AppState.alerts.length > 20) AppState.alerts.pop();
         renderAlerts();
       }
+      AppState.lastPred = pred;
+      renderHeatmap(pred);
+      renderSensorMarkers();
     }
 
     function renderAlerts() {
@@ -803,10 +957,35 @@
       renderMap();
       renderCharts();
       
-      const pred = computeRisk(weather, sensor, AppState.settings);
+      const pred = await fetchPredict(AppState.selected, weather, sensor, AppState.settings);
       updatePredictionUI(pred);
       
       document.getElementById('status').innerHTML = '<span class="inline-flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-green-500"></div>Updated</span>';
+    }
+
+    async function fetchPredict(loc, weather, sensor, settings) {
+      const hasApi = (settings?.apiBase || '').trim().length > 0;
+      try {
+        if (hasApi) {
+          const url = new URL((settings.apiBase.endsWith('/') ? settings.apiBase : settings.apiBase + '/') + 'predict');
+          url.searchParams.set('lat', String(loc.lat));
+          url.searchParams.set('lng', String(loc.lng));
+          const res = await fetch(url.toString(), {
+            headers: settings.apiKey ? { 'Authorization': settings.apiKey } : {}
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const score = Math.max(0, Math.min(100, Number(data.score ?? 0)));
+            const label = data.label || (score >= 70 ? 'High' : score >= 40 ? 'Medium' : 'Low');
+            const confidence = Number.isFinite(data.confidence) ? data.confidence : 80;
+            const derived = computeRisk(weather, sensor, settings);
+            return { score, label, confidence, rain24: derived.rain24, wlTrend: derived.wlTrend, alert: score >= (settings.threshold ?? 60) };
+          }
+        }
+      } catch (e) {
+        console.warn('Prediction API failed, using local risk:', e);
+      }
+      return computeRisk(weather, sensor, settings);
     }
 
     function sendTestAlert() {
@@ -865,6 +1044,27 @@
       });
       
       document.getElementById('location').addEventListener('change', () => { updateEvacList(); updateUI(); });
+      const heatToggle = document.getElementById('toggleHeatmap');
+      if (heatToggle) heatToggle.addEventListener('change', () => { renderHeatmap(AppState.lastPred); });
+      const sensorsToggle = document.getElementById('toggleSensors');
+      if (sensorsToggle) sensorsToggle.addEventListener('change', renderSensorMarkers);
+      const form = document.getElementById('incidentForm');
+      if (form) form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const time = document.getElementById('incidentTime').value || new Date().toISOString();
+        const severity = document.getElementById('incidentSeverity').value || 'Low';
+        const notes = document.getElementById('incidentNotes').value.trim();
+        const items = loadIncidents();
+        items.push({ time, severity, notes, location: AppState.selected.name });
+        saveIncidents(items);
+        (document.getElementById('incidentNotes').value = '');
+        renderIncidents();
+        showToast('✓ Incident added');
+      });
+      const btnEA = document.getElementById('btnExportAlerts');
+      if (btnEA) btnEA.addEventListener('click', () => exportCSV('alerts'));
+      const btnEI = document.getElementById('btnExportIncidents');
+      if (btnEI) btnEI.addEventListener('click', () => exportCSV('incidents'));
       
       document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
@@ -878,6 +1078,7 @@
       bindUI();
       updateEvacList();
       await updateUI();
+      renderIncidents();
       showToast('✓ System initialized');
     }
 
