@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Smart Flood Detection System - National University Lipa</title>
+    
+    <!-- iOS Web App Capabilities -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Smart Flood">
+    <meta name="theme-color" content="#1e4a7a">
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -23,7 +29,7 @@
     <link rel="apple-touch-icon" href="images/logo.png" />
     
     <style>
-        /* Custom CSS Variables from your design */
+        /* Custom CSS Variables */
         :root {
             --navy-blue: #1e4a7a;
             --bright-cyan: #00bcd4;
@@ -40,10 +46,32 @@
             --muted-foreground: #546e7a;
         }
 
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: linear-gradient(to bottom right, #f5f9fc, #f5f9fc, rgba(0, 188, 212, 0.05));
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Mobile-optimized scrolling */
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Prevent horizontal overflow */
+        html, body {
+            max-width: 100vw;
+            overflow-x: hidden;
         }
 
         .decorative-bg {
@@ -59,10 +87,10 @@
             position: absolute;
             top: 0;
             right: 0;
-            width: 384px;
-            height: 384px;
+            width: 200px;
+            height: 200px;
             background: radial-gradient(circle, rgba(0, 188, 212, 0.15), transparent);
-            filter: blur(80px);
+            filter: blur(60px);
         }
 
         .decorative-bg::after {
@@ -70,48 +98,74 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 384px;
-            height: 384px;
+            width: 200px;
+            height: 200px;
             background: radial-gradient(circle, rgba(139, 195, 74, 0.15), transparent);
-            filter: blur(80px);
+            filter: blur(60px);
+        }
+
+        @media (min-width: 768px) {
+            .decorative-bg::before,
+            .decorative-bg::after {
+                width: 384px;
+                height: 384px;
+            }
         }
 
         .gradient-header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 2rem;
+            padding: 1.5rem;
             border-radius: 1rem;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
         }
 
+        @media (min-width: 640px) {
+            .gradient-header {
+                padding: 2rem;
+            }
+        }
+
         .metric-card {
             background: white;
             border-radius: 0.75rem;
-            padding: 1.5rem;
+            padding: 1.25rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             border-top: 4px solid transparent;
             transition: all 0.3s ease;
+            min-height: 120px;
         }
 
-        .metric-card:hover {
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-            border-top-color: var(--secondary);
+        @media (min-width: 640px) {
+            .metric-card {
+                padding: 1.5rem;
+            }
+        }
+
+        .metric-card:active {
+            transform: scale(0.98);
         }
 
         .chart-card {
             background: white;
             border-radius: 0.75rem;
-            padding: 1.5rem;
+            padding: 1.25rem;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             border-left: 4px solid var(--secondary);
+        }
+
+        @media (min-width: 640px) {
+            .chart-card {
+                padding: 1.5rem;
+            }
         }
 
         .risk-badge {
             display: inline-flex;
             align-items: center;
             gap: 0.375rem;
-            padding: 0.25rem 0.75rem;
+            padding: 0.375rem 0.875rem;
             border-radius: 9999px;
             font-size: 0.875rem;
             font-weight: 500;
@@ -136,8 +190,9 @@
             border-color: rgba(229, 57, 53, 0.3);
         }
 
+        /* Mobile-optimized buttons (44x44px minimum touch target) */
         .nav-button {
-            padding: 0.625rem 1.25rem;
+            padding: 0.75rem 1rem;
             border-radius: 0.5rem;
             border: none;
             background: transparent;
@@ -148,10 +203,12 @@
             font-weight: 500;
             transition: all 0.2s;
             color: var(--foreground);
+            min-height: 44px;
+            font-size: 0.9375rem;
         }
 
-        .nav-button:hover {
-            background: rgba(255, 255, 255, 0.6);
+        .nav-button:active {
+            transform: scale(0.95);
         }
 
         .nav-button.active {
@@ -177,59 +234,14 @@
             border-color: var(--secondary);
         }
 
-        .sensor-marker {
-            position: absolute;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid;
-            cursor: pointer;
-            transition: transform 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .sensor-marker:hover {
-            transform: scale(1.2);
-        }
-
-        .sensor-marker.high {
-            background: #e53935;
-            border-color: #c62828;
-            box-shadow: 0 0 20px rgba(229, 57, 53, 0.5);
-            animation: pulse-red 2s infinite;
-        }
-
-        .sensor-marker.medium {
-            background: #ffc107;
-            border-color: #f57c00;
-            box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
-        }
-
-        .sensor-marker.low {
-            background: #8bc34a;
-            border-color: #689f38;
-            box-shadow: 0 0 20px rgba(139, 195, 74, 0.5);
-        }
-
-        @keyframes pulse-red {
-            0%, 100% {
-                box-shadow: 0 0 20px rgba(229, 57, 53, 0.5);
-            }
-            50% {
-                box-shadow: 0 0 40px rgba(229, 57, 53, 0.8);
-            }
-        }
-
         .hidden {
             display: none !important;
         }
 
         .progress-bar {
-            height: 8px;
+            height: 10px;
             background: #e0e0e0;
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
             margin-top: 0.5rem;
         }
@@ -239,9 +251,19 @@
             transition: width 0.3s ease;
         }
 
+        /* Mobile Navigation */
         @media (max-width: 768px) {
             .nav-desktop {
                 display: none;
+            }
+            
+            .gradient-header h1 {
+                font-size: 1.5rem !important;
+            }
+            
+            /* Improve readability on mobile */
+            body {
+                font-size: 16px; /* Prevent iOS zoom on input focus */
             }
         }
 
@@ -251,23 +273,61 @@
             }
         }
 
-        /* Responsive fixes for inline style tokens */
-        @media (min-width: 1024px) {
-            #mapGrid {
-                grid-template-columns: 2fr 1fr;
-            }
-            #footerFlex {
-                flex-direction: row;
+        /* Responsive grids */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        @media (min-width: 640px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
 
-        /* Let vertical scroll pass through the map on touch devices */
-        #leafletMap {
-            touch-action: pan-y;
+        @media (min-width: 1024px) {
+            .metrics-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
         }
-        /* Default: let page scroll pass through the map */
-        #leafletMap.disabled-interactions {
-            pointer-events: none;
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .charts-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .map-grid {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        /* Map optimizations for mobile */
+        #leafletMap {
+            height: 400px !important;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            touch-action: pan-x pan-y;
+        }
+
+        @media (min-width: 640px) {
+            #leafletMap {
+                height: 500px !important;
+            }
         }
 
         /* Leaflet custom styles */
@@ -275,20 +335,79 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+        
         .leaflet-popup-tip {
             background: white;
         }
+        
         .custom-marker {
             background: transparent;
             border: none;
         }
         
-        @keyframes marker-pulse {
-            0%, 100% {
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        .leaflet-container a.leaflet-popup-close-button {
+            font-size: 24px;
+            padding: 8px;
+            width: 32px;
+            height: 32px;
+        }
+
+        /* Better touch targets for mobile */
+        button, a, .clickable {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        /* Prevent text selection on buttons */
+        button {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Responsive images */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Footer responsive */
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .footer-content {
+                flex-direction: row;
             }
-            50% {
-                box-shadow: 0 4px 20px rgba(229, 57, 53, 0.8), 0 0 0 8px rgba(229, 57, 53, 0.2);
+        }
+
+        /* Smooth animations */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* iOS safe area support */
+        @supports (padding-top: env(safe-area-inset-top)) {
+            header {
+                padding-top: max(1rem, env(safe-area-inset-top));
+            }
+            
+            footer {
+                padding-bottom: max(1rem, env(safe-area-inset-bottom));
             }
         }
     </style>
@@ -300,78 +419,81 @@
     <!-- Main Container -->
     <div style="position: relative; z-index: 1;">
         <!-- Header -->
-        <header style="position: sticky; top: 0; z-index: 50; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(30, 74, 122, 0.12); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-            <div style="max-width: 1280px; margin: 0 auto; padding: 0 1rem;">
-                <div style="display: flex; align-items: center; justify-content: space-between; height: 80px;">
+        <header style="position: sticky; top: 0; z-index: 50; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(30, 74, 122, 0.12); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+            <div style="max-width: 1280px; margin: 0 auto; padding: 0.75rem 1rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; min-height: 64px;">
                     <!-- Logo Section -->
-                    <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <img src="images/logo.png" 
-                             alt="Smart Flood Logo" style="width: 56px; height: 56px;">
+                             alt="Smart Flood Logo" style="width: 48px; height: 48px; flex-shrink: 0;">
                         <div>
-                            <h2 style="font-size: 1.25rem; color: var(--primary); font-weight: 600; margin: 0;">Smart Flood Detection</h2>
+                            <h2 style="font-size: 1.125rem; color: var(--primary); font-weight: 600; margin: 0; line-height: 1.2;">Smart Flood Detection</h2>
                             <p style="font-size: 0.75rem; color: var(--muted-foreground); margin: 0;">Philippine Monitoring System</p>
                         </div>
                     </div>
+                    
                     <!-- Mobile Menu Toggle -->
-                    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" style="background: transparent; border: none; cursor: pointer; padding: 0.5rem;">
+                    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" 
+                            style="background: transparent; border: none; cursor: pointer; padding: 0.75rem; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center;">
                         <i data-feather="menu" style="width: 24px; height: 24px;"></i>
                     </button>
 
                     <!-- Desktop Navigation -->
                     <nav class="nav-desktop" style="display: flex; align-items: center; gap: 0.5rem; background: rgba(232, 244, 248, 0.5); padding: 0.375rem; border-radius: 0.75rem;">
                         <button class="nav-button active" onclick="switchTab('dashboard')" id="nav-dashboard">
-                            <i data-feather="layout" style="width: 16px; height: 16px;"></i>
-                            Dashboard
+                            <i data-feather="layout" style="width: 18px; height: 18px;"></i>
+                            <span>Dashboard</span>
                         </button>
                         <button class="nav-button" onclick="switchTab('map')" id="nav-map">
-                            <i data-feather="map" style="width: 16px; height: 16px;"></i>
-                            Map View
+                            <i data-feather="map" style="width: 18px; height: 18px;"></i>
+                            <span>Map</span>
                         </button>
                         <button class="nav-button" onclick="switchTab('predictions')" id="nav-predictions">
-                            <i data-feather="cpu" style="width: 16px; height: 16px;"></i>
-                            Predictions
+                            <i data-feather="cpu" style="width: 18px; height: 18px;"></i>
+                            <span>Predictions</span>
                         </button>
                         <button class="nav-button" onclick="switchTab('alerts')" id="nav-alerts">
-                            <i data-feather="bell" style="width: 16px; height: 16px;"></i>
-                            Alerts
+                            <i data-feather="bell" style="width: 18px; height: 18px;"></i>
+                            <span>Alerts</span>
                         </button>
                     </nav>
                 </div>
 
                 <!-- Mobile Navigation -->
-                <div id="mobileMenu" class="nav-mobile hidden" style="border-top: 1px solid rgba(30, 74, 122, 0.12); padding: 1rem; background: #f5f9fc;">
-                    <button class="nav-button active" onclick="switchTab('dashboard'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start; margin-bottom: 0.5rem;">
-                        <i data-feather="layout" style="width: 16px; height: 16px;"></i>
-                        Dashboard
-                    </button>
-                    <button class="nav-button" onclick="switchTab('map'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start; margin-bottom: 0.5rem;">
-                        <i data-feather="map" style="width: 16px; height: 16px;"></i>
-                        Map View
-                    </button>
-                    <button class="nav-button" onclick="switchTab('predictions'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start; margin-bottom: 0.5rem;">
-                        <i data-feather="cpu" style="width: 16px; height: 16px;"></i>
-                        Predictions
-                    </button>
-                    <button class="nav-button" onclick="switchTab('alerts'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start;">
-                        <i data-feather="bell" style="width: 16px; height: 16px;"></i>
-                        Alerts
-                    </button>
+                <div id="mobileMenu" class="nav-mobile hidden" style="border-top: 1px solid rgba(30, 74, 122, 0.12); padding: 1rem 0; background: #f5f9fc; margin: 0 -1rem;">
+                    <div style="padding: 0 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <button class="nav-button active" onclick="switchTab('dashboard'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start;">
+                            <i data-feather="layout" style="width: 20px; height: 20px;"></i>
+                            Dashboard
+                        </button>
+                        <button class="nav-button" onclick="switchTab('map'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start;">
+                            <i data-feather="map" style="width: 20px; height: 20px;"></i>
+                            Map View
+                        </button>
+                        <button class="nav-button" onclick="switchTab('predictions'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start;">
+                            <i data-feather="cpu" style="width: 20px; height: 20px;"></i>
+                            Predictions
+                        </button>
+                        <button class="nav-button" onclick="switchTab('alerts'); toggleMobileMenu();" style="width: 100%; justify-content: flex-start;">
+                            <i data-feather="bell" style="width: 20px; height: 20px;"></i>
+                            Alerts
+                        </button>
+                    </div>
                 </div>
-
             </div>
         </header>
 
         <!-- Main Content -->
-        <main style="max-width: 1280px; margin: 0 auto; padding: 2rem 1rem;">
+        <main style="max-width: 1280px; margin: 0 auto; padding: 1.5rem 1rem;">
             <!-- Dashboard Tab -->
             <div id="dashboard-tab" class="tab-content">
                 <!-- Gradient Header -->
                 <div class="gradient-header">
                     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                        <i data-feather="droplet" style="width: 32px; height: 32px;"></i>
-                        <h1 style="font-size: 1.875rem; margin: 0; color: white;">Smart Flood Detection Dashboard</h1>
+                        <i data-feather="droplet" style="width: 28px; height: 28px;"></i>
+                        <h1 style="font-size: 1.75rem; margin: 0; color: white; line-height: 1.2;">Smart Flood Detection Dashboard</h1>
                     </div>
-                    <p style="margin: 0; opacity: 0.95;">Real-time monitoring and prediction for flood-prone areas in the Philippines</p>
+                    <p style="margin: 0; opacity: 0.95; font-size: 0.9375rem;">Real-time monitoring and prediction for flood-prone areas in the Philippines</p>
                 </div>
 
                 <!-- Recent Alerts -->
@@ -379,7 +501,7 @@
                     <div style="display: flex; align-items: start; gap: 0.75rem;">
                         <i data-feather="alert-triangle" style="width: 20px; height: 20px; color: #f57c00; flex-shrink: 0;"></i>
                         <div style="flex: 1;">
-                            <h4 style="margin: 0 0 0.25rem 0; color: #f57c00;">Barangay San Jose</h4>
+                            <h4 style="margin: 0 0 0.25rem 0; color: #f57c00; font-size: 0.9375rem;">Barangay San Jose</h4>
                             <p style="margin: 0; font-size: 0.875rem; color: var(--foreground);">High flood risk detected. Expected water level: 3.2m • 10 minutes ago</p>
                         </div>
                     </div>
@@ -389,232 +511,140 @@
                     <div style="display: flex; align-items: start; gap: 0.75rem;">
                         <i data-feather="info" style="width: 20px; height: 20px; color: var(--secondary); flex-shrink: 0;"></i>
                         <div style="flex: 1;">
-                            <h4 style="margin: 0 0 0.25rem 0; color: var(--secondary);">Barangay Poblacion</h4>
+                            <h4 style="margin: 0 0 0.25rem 0; color: var(--secondary); font-size: 0.9375rem;">Barangay Poblacion</h4>
                             <p style="margin: 0; font-size: 0.875rem; color: var(--foreground);">Heavy rainfall forecast for next 6 hours • 25 minutes ago</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Metrics Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="metrics-grid" style="margin-bottom: 1.5rem;">
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Current Rainfall</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="cloud-rain" style="width: 20px; height: 20px; color: var(--secondary);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">15.2 mm/hr</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">15.2 mm/hr</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #e53935;">+23% from last hour</p>
                     </div>
 
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Average Water Level</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="activity" style="width: 20px; height: 20px; color: var(--primary);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">2.3 meters</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">2.3 meters</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #e53935;">Above normal threshold</p>
                     </div>
 
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Active Sensors</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="radio" style="width: 20px; height: 20px; color: var(--accent);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">12 / 15</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">12 / 15</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--muted-foreground);">3 sensors offline</p>
                     </div>
 
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">High Risk Areas</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="alert-triangle" style="width: 20px; height: 20px; color: var(--destructive);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">3 locations</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">3 locations</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: #e53935;">2 new alerts today</p>
                     </div>
                 </div>
 
                 <!-- Charts -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="charts-grid" style="margin-bottom: 1.5rem;">
                     <div class="chart-card">
                         <div style="margin-bottom: 1rem;">
-                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
                                 <i data-feather="cloud-rain" style="width: 20px; height: 20px; color: var(--secondary);"></i>
-                                Rainfall Monitoring (24h)
+                                Rainfall (24h)
                             </h3>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Actual vs Forecasted Rainfall</p>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Actual vs Forecast</p>
                         </div>
-                        <canvas id="rainfallChart" style="max-height: 300px;"></canvas>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="rainfallChart"></canvas>
+                        </div>
                     </div>
 
                     <div class="chart-card" style="border-left-color: var(--primary);">
                         <div style="margin-bottom: 1rem;">
-                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
                                 <i data-feather="activity" style="width: 20px; height: 20px; color: var(--primary);"></i>
-                                Water Level Monitoring (24h)
+                                Water Level (24h)
                             </h3>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">River gauge readings and thresholds</p>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">River gauge readings</p>
                         </div>
-                        <canvas id="waterLevelChart" style="max-height: 300px;"></canvas>
+                        <div style="position: relative; height: 250px;">
+                            <canvas id="waterLevelChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Predictions Table -->
                 <div class="chart-card" style="border-left-color: var(--accent);">
                     <div style="margin-bottom: 1rem;">
-                        <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
                             <i data-feather="cpu" style="width: 20px; height: 20px; color: var(--accent);"></i>
-                            Flood Risk Predictions by Location
+                            Flood Risk Predictions
                         </h3>
-                        <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">ML-based flood likelihood predictions for monitored areas</p>
+                        <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">ML-based flood likelihood predictions</p>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(232, 244, 248, 0.5)'" onmouseout="this.style.background='transparent'">
-                            <div style="flex: 1;">
-                                <h4 style="margin: 0 0 0.5rem 0;">Barangay San Jose</h4>
-                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                                    <span class="risk-badge high">
-                                        <i data-feather="alert-triangle" style="width: 14px; height: 14px;"></i>
-                                        High Risk
-                                    </span>
-                                    <span style="font-size: 0.875rem; color: var(--muted-foreground);">87% probability</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 128px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; width: 87%; background: #e53935;"></div>
-                                </div>
-                                <i data-feather="bell" style="width: 16px; height: 16px; color: var(--muted-foreground); cursor: pointer;"></i>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(232, 244, 248, 0.5)'" onmouseout="this.style.background='transparent'">
-                            <div style="flex: 1;">
-                                <h4 style="margin: 0 0 0.5rem 0;">Barangay Santa Cruz</h4>
-                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                                    <span class="risk-badge medium">
-                                        <i data-feather="alert-circle" style="width: 14px; height: 14px;"></i>
-                                        Medium Risk
-                                    </span>
-                                    <span style="font-size: 0.875rem; color: var(--muted-foreground);">62% probability</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 128px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; width: 62%; background: #ffc107;"></div>
-                                </div>
-                                <i data-feather="bell" style="width: 16px; height: 16px; color: var(--muted-foreground); cursor: pointer;"></i>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(232, 244, 248, 0.5)'" onmouseout="this.style.background='transparent'">
-                            <div style="flex: 1;">
-                                <h4 style="margin: 0 0 0.5rem 0;">Barangay Poblacion</h4>
-                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                                    <span class="risk-badge high">
-                                        <i data-feather="alert-triangle" style="width: 14px; height: 14px;"></i>
-                                        High Risk
-                                    </span>
-                                    <span style="font-size: 0.875rem; color: var(--muted-foreground);">78% probability</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 128px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; width: 78%; background: #e53935;"></div>
-                                </div>
-                                <i data-feather="bell" style="width: 16px; height: 16px; color: var(--muted-foreground); cursor: pointer;"></i>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(232, 244, 248, 0.5)'" onmouseout="this.style.background='transparent'">
-                            <div style="flex: 1;">
-                                <h4 style="margin: 0 0 0.5rem 0;">Barangay Riverside</h4>
-                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                                    <span class="risk-badge low">
-                                        <i data-feather="check-circle" style="width: 14px; height: 14px;"></i>
-                                        Low Risk
-                                    </span>
-                                    <span style="font-size: 0.875rem; color: var(--muted-foreground);">34% probability</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 128px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; width: 34%; background: #8bc34a;"></div>
-                                </div>
-                                <i data-feather="bell" style="width: 16px; height: 16px; color: var(--muted-foreground); cursor: pointer;"></i>
-                            </div>
-                        </div>
-
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem; transition: background 0.2s;" onmouseover="this.style.background='rgba(232, 244, 248, 0.5)'" onmouseout="this.style.background='transparent'">
-                            <div style="flex: 1;">
-                                <h4 style="margin: 0 0 0.5rem 0;">Barangay Central</h4>
-                                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                                    <span class="risk-badge medium">
-                                        <i data-feather="alert-circle" style="width: 14px; height: 14px;"></i>
-                                        Medium Risk
-                                    </span>
-                                    <span style="font-size: 0.875rem; color: var(--muted-foreground);">55% probability</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="width: 128px; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; width: 55%; background: #ffc107;"></div>
-                                </div>
-                                <i data-feather="bell" style="width: 16px; height: 16px; color: var(--muted-foreground); cursor: pointer;"></i>
-                            </div>
-                        </div>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <!-- Prediction items will be generated dynamically -->
+                        <div id="predictionsList"></div>
                     </div>
                 </div>
-
             </div>
 
             <!-- Map Tab -->
             <div id="map-tab" class="tab-content hidden">
                 <div class="gradient-header">
                     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                        <i data-feather="map-pin" style="width: 32px; height: 32px;"></i>
-                        <h1 style="font-size: 1.875rem; margin: 0; color: white;">Flood Risk Map</h1>
+                        <i data-feather="map-pin" style="width: 28px; height: 28px;"></i>
+                        <h1 style="font-size: 1.75rem; margin: 0; color: white; line-height: 1.2;">Flood Risk Map</h1>
                     </div>
-                    <p style="margin: 0; opacity: 0.95;">Interactive map showing sensor locations and real-time flood risk zones</p>
+                    <p style="margin: 0; opacity: 0.95; font-size: 0.9375rem;">Interactive map showing sensor locations and risk zones</p>
                 </div>
 
-                <div id="mapGrid" style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                <div class="map-grid">
                     <!-- Map Card -->
                     <div class="chart-card">
                         <div style="margin-bottom: 1rem;">
-                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
                                 <i data-feather="navigation" style="width: 20px; height: 20px; color: var(--secondary);"></i>
                                 Sensor Network Map
                             </h3>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Real-time sensor locations and status</p>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Tap markers for details</p>
                         </div>
                         
-                        <!-- Leaflet Map with small toggle to avoid blocking page scroll -->
-                        <div id="mapWrapper" style="position: relative;">
-                            <div id="leafletMap" style="height: 500px; border-radius: 0.5rem; overflow: hidden; border: 1px solid rgba(0, 188, 212, 0.2);"></div>
-                        </div>
+                        <div id="leafletMap" style="border: 1px solid rgba(0, 188, 212, 0.2);"></div>
                     </div>
 
                     <!-- Sensor Details -->
                     <div class="chart-card" style="border-left-color: var(--primary);">
                         <div style="margin-bottom: 1rem;">
-                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
                                 <i data-feather="radio" style="width: 20px; height: 20px; color: var(--primary);"></i>
                                 Sensor Details
                             </h3>
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);" id="sensorDetailsDesc">Click on a sensor to view details</p>
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);" id="sensorDetailsDesc">Tap a sensor to view details</p>
                         </div>
                         
                         <div id="sensorDetails">
-                            <div style="text-align: center; padding: 3rem 1rem; color: var(--muted-foreground);">
+                            <div style="text-align: center; padding: 2rem 1rem; color: var(--muted-foreground);">
                                 <i data-feather="map-pin" style="width: 48px; height: 48px; opacity: 0.5; margin: 0 auto 1rem;"></i>
                                 <p style="margin: 0; font-size: 0.875rem;">Select a sensor on the map to view detailed information</p>
                             </div>
@@ -625,7 +655,7 @@
                 <!-- All Sensors List -->
                 <div class="chart-card" style="margin-top: 1.5rem;">
                     <div style="margin-bottom: 1rem;">
-                        <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
                             <i data-feather="radio" style="width: 20px; height: 20px; color: var(--primary);"></i>
                             All Sensors
                         </h3>
@@ -639,22 +669,22 @@
             <div id="predictions-tab" class="tab-content hidden">
                 <div class="gradient-header">
                     <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                        <i data-feather="cpu" style="width: 32px; height: 32px;"></i>
-                        <h1 style="font-size: 1.875rem; margin: 0; color: white;">ML Prediction Console</h1>
+                        <i data-feather="cpu" style="width: 28px; height: 28px;"></i>
+                        <h1 style="font-size: 1.75rem; margin: 0; color: white; line-height: 1.2;">ML Prediction Console</h1>
                     </div>
-                    <p style="margin: 0; opacity: 0.95;">Machine learning model performance and flood forecasts</p>
+                    <p style="margin: 0; opacity: 0.95; font-size: 0.9375rem;">Machine learning model performance and flood forecasts</p>
                 </div>
 
                 <!-- Model Metrics -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="metrics-grid" style="margin-bottom: 1.5rem;">
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Model Accuracy</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="target" style="width: 20px; height: 20px; color: var(--accent);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">93.2%</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">93.2%</p>
                         <div class="progress-bar">
                             <div class="progress-fill" style="width: 93.2%; background: var(--accent);"></div>
                         </div>
@@ -662,35 +692,35 @@
                     </div>
 
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Predictions Today</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="activity" style="width: 20px; height: 20px; color: var(--secondary);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">248</p>
-                        <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--muted-foreground);">Running every 15 minutes</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">248</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--muted-foreground);">Every 15 minutes</p>
                     </div>
 
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Training Data</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="database" style="width: 20px; height: 20px; color: var(--primary);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">15,432</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">15,432</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--muted-foreground);">Historical records</p>
                     </div>
 
                     <div class="metric-card">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Last Retrained</p>
                             <div style="background: var(--muted); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="calendar" style="width: 20px; height: 20px; color: #f57c00;"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">3 days</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">3 days</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--muted-foreground);">Next: in 4 days</p>
                     </div>
                 </div>
@@ -698,58 +728,51 @@
                 <!-- Forecast Chart -->
                 <div class="chart-card">
                     <div style="margin-bottom: 1rem;">
-                        <h3 style="margin: 0 0 0.25rem 0;">48-Hour Flood Risk Forecast</h3>
-                        <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">ML-based predictions for upcoming flood events</p>
+                        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.125rem;">48-Hour Flood Risk Forecast</h3>
+                        <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">ML-based predictions</p>
                     </div>
-                    <canvas id="forecastChart" style="max-height: 350px;"></canvas>
+                    <div style="position: relative; height: 250px;">
+                        <canvas id="forecastChart"></canvas>
+                    </div>
                 </div>
 
                 <!-- Model Info -->
                 <div class="chart-card" style="margin-top: 1.5rem;">
                     <div style="margin-bottom: 1rem;">
-                        <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <h3 style="margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem;">
                             <i data-feather="cpu" style="width: 20px; height: 20px; color: var(--accent);"></i>
                             Model Information
                         </h3>
                         <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Current production model details</p>
                     </div>
                     
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
                         <div style="padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
                             <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--muted-foreground);">Algorithm</p>
-                            <p style="margin: 0;">XGBoost Classifier</p>
+                            <p style="margin: 0; font-size: 0.875rem;">XGBoost</p>
                         </div>
                         <div style="padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
                             <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--muted-foreground);">Version</p>
-                            <p style="margin: 0;">v2.4.1</p>
-                        </div>
-                        <div style="padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
-                            <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--muted-foreground);">Training Date</p>
-                            <p style="margin: 0;">October 12, 2025</p>
-                        </div>
-                        <div style="padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
-                            <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--muted-foreground);">Training Samples</p>
-                            <p style="margin: 0;">15,432 records</p>
+                            <p style="margin: 0; font-size: 0.875rem;">v2.4.1</p>
                         </div>
                         <div style="padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
                             <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--muted-foreground);">Features</p>
-                            <p style="margin: 0;">24 input variables</p>
+                            <p style="margin: 0; font-size: 0.875rem;">24 variables</p>
                         </div>
                         <div style="padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
-                            <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--muted-foreground);">Inference Time</p>
-                            <p style="margin: 0;">~0.3 seconds</p>
+                            <p style="margin: 0 0 0.25rem 0; font-size: 0.75rem; color: var(--muted-foreground);">Speed</p>
+                            <p style="margin: 0; font-size: 0.875rem;">~0.3s</p>
                         </div>
                     </div>
 
-                    <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 188, 212, 0.1); border: 1px solid rgba(0, 188, 212, 0.2); border-radius: 0.5rem;">
+                    <div style="padding: 1rem; background: rgba(0, 188, 212, 0.1); border: 1px solid rgba(0, 188, 212, 0.2); border-radius: 0.5rem;">
                         <div style="display: flex; align-items: start; gap: 0.75rem;">
                             <i data-feather="cpu" style="width: 20px; height: 20px; color: var(--secondary); flex-shrink: 0; margin-top: 0.125rem;"></i>
                             <div>
                                 <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">Model Description</h4>
                                 <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">
-                                    The current production model uses gradient boosting to predict flood likelihood based on 
-                                    meteorological data, water level sensors, and historical flood patterns. It's retrained 
-                                    monthly with new data to maintain accuracy.
+                                    Uses gradient boosting to predict flood likelihood based on 
+                                    meteorological data, water level sensors, and historical flood patterns.
                                 </p>
                             </div>
                         </div>
@@ -763,50 +786,50 @@
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                                <i data-feather="bell" style="width: 32px; height: 32px;"></i>
-                                <h1 style="font-size: 1.875rem; margin: 0; color: white;">Alert Management</h1>
+                                <i data-feather="bell" style="width: 28px; height: 28px;"></i>
+                                <h1 style="font-size: 1.75rem; margin: 0; color: white; line-height: 1.2;">Alert Management</h1>
                             </div>
-                            <p style="margin: 0; opacity: 0.95;">Manage and monitor flood warnings and notifications</p>
+                            <p style="margin: 0; opacity: 0.95; font-size: 0.9375rem;">Manage flood warnings and notifications</p>
                         </div>
-                        <button style="background: white; color: var(--primary); border: none; padding: 0.625rem 1.25rem; border-radius: 0.5rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500;">
-                            <i data-feather="settings" style="width: 16px; height: 16px;"></i>
-                            Alert Settings
+                        <button style="background: white; color: var(--primary); border: none; padding: 0.75rem 1.25rem; border-radius: 0.5rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 500; min-height: 44px;">
+                            <i data-feather="settings" style="width: 18px; height: 18px;"></i>
+                            Settings
                         </button>
                     </div>
                 </div>
 
                 <!-- Summary Cards -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="metrics-grid" style="margin-bottom: 1.5rem;">
                     <div class="metric-card" style="border-top-color: var(--destructive);">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Active Alerts</p>
                             <div style="background: rgba(229, 57, 53, 0.1); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="bell" style="width: 20px; height: 20px; color: var(--destructive);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">3</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">3</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--destructive);">2 critical alerts</p>
                     </div>
 
                     <div class="metric-card" style="border-top-color: var(--secondary);">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
                             <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Total Recipients</p>
                             <div style="background: rgba(0, 188, 212, 0.1); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="message-square" style="width: 20px; height: 20px; color: var(--secondary);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">987</p>
-                        <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--muted-foreground);">Across all locations</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">987</p>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--muted-foreground);">All locations</p>
                     </div>
 
                     <div class="metric-card" style="border-top-color: var(--accent);">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Messages Sent (24h)</p>
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                            <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Messages (24h)</p>
                             <div style="background: rgba(139, 195, 74, 0.1); padding: 0.5rem; border-radius: 0.5rem;">
                                 <i data-feather="mail" style="width: 20px; height: 20px; color: var(--accent);"></i>
                             </div>
                         </div>
-                        <p style="margin: 0; font-size: 1.875rem; font-weight: 600;">1,254</p>
+                        <p style="margin: 0; font-size: 1.75rem; font-weight: 600;">1,254</p>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.75rem; color: var(--accent);">98.5% delivered</p>
                     </div>
                 </div>
@@ -814,7 +837,7 @@
                 <!-- Active Alerts List -->
                 <div class="chart-card">
                     <div style="margin-bottom: 1rem;">
-                        <h3 style="margin: 0 0 0.25rem 0;">Current Active Alerts</h3>
+                        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.125rem;">Current Active Alerts</h3>
                         <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">Real-time flood warnings requiring attention</p>
                     </div>
 
@@ -823,22 +846,19 @@
                             <div style="display: flex; align-items: start; gap: 0.75rem;">
                                 <i data-feather="alert-triangle" style="width: 20px; height: 20px; color: var(--destructive); flex-shrink: 0; margin-top: 0.125rem;"></i>
                                 <div style="flex: 1;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                                        <h4 style="margin: 0; color: var(--destructive);">Barangay San Jose</h4>
-                                        <span class="risk-badge high" style="font-size: 0.75rem; padding: 0.125rem 0.5rem;">HIGH</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                                        <h4 style="margin: 0; color: var(--destructive); font-size: 0.9375rem;">Barangay San Jose</h4>
+                                        <span class="risk-badge high" style="font-size: 0.75rem; padding: 0.25rem 0.625rem;">HIGH</span>
                                     </div>
                                     <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">Critical water level detected. Immediate evacuation recommended.</p>
-                                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted-foreground);">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted-foreground);">
                                         <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                             <i data-feather="clock" style="width: 12px; height: 12px;"></i>
-                                            5 minutes ago
+                                            5 min ago
                                         </span>
                                         <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                             <i data-feather="message-square" style="width: 12px; height: 12px;"></i>
                                             342 recipients
-                                        </span>
-                                        <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
-                                            SMS • Email • Push
                                         </span>
                                     </div>
                                 </div>
@@ -849,22 +869,19 @@
                             <div style="display: flex; align-items: start; gap: 0.75rem;">
                                 <i data-feather="alert-circle" style="width: 20px; height: 20px; color: #f57c00; flex-shrink: 0; margin-top: 0.125rem;"></i>
                                 <div style="flex: 1;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                                        <h4 style="margin: 0; color: #f57c00;">Barangay Santa Cruz</h4>
-                                        <span class="risk-badge medium" style="font-size: 0.75rem; padding: 0.125rem 0.5rem;">MEDIUM</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                                        <h4 style="margin: 0; color: #f57c00; font-size: 0.9375rem;">Barangay Santa Cruz</h4>
+                                        <span class="risk-badge medium" style="font-size: 0.75rem; padding: 0.25rem 0.625rem;">MEDIUM</span>
                                     </div>
                                     <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">Heavy rainfall forecast. Monitor water levels closely.</p>
-                                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted-foreground);">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted-foreground);">
                                         <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                             <i data-feather="clock" style="width: 12px; height: 12px;"></i>
-                                            18 minutes ago
+                                            18 min ago
                                         </span>
                                         <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                             <i data-feather="message-square" style="width: 12px; height: 12px;"></i>
                                             189 recipients
-                                        </span>
-                                        <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
-                                            SMS • Email
                                         </span>
                                     </div>
                                 </div>
@@ -875,22 +892,19 @@
                             <div style="display: flex; align-items: start; gap: 0.75rem;">
                                 <i data-feather="alert-triangle" style="width: 20px; height: 20px; color: var(--destructive); flex-shrink: 0; margin-top: 0.125rem;"></i>
                                 <div style="flex: 1;">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                                        <h4 style="margin: 0; color: var(--destructive);">Barangay Poblacion</h4>
-                                        <span class="risk-badge high" style="font-size: 0.75rem; padding: 0.125rem 0.5rem;">HIGH</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                                        <h4 style="margin: 0; color: var(--destructive); font-size: 0.9375rem;">Barangay Poblacion</h4>
+                                        <span class="risk-badge high" style="font-size: 0.75rem; padding: 0.25rem 0.625rem;">HIGH</span>
                                     </div>
                                     <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">Water level rising rapidly. Prepare for evacuation.</p>
-                                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted-foreground);">
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; font-size: 0.75rem; color: var(--muted-foreground);">
                                         <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                             <i data-feather="clock" style="width: 12px; height: 12px;"></i>
-                                            32 minutes ago
+                                            32 min ago
                                         </span>
                                         <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
                                             <i data-feather="message-square" style="width: 12px; height: 12px;"></i>
                                             456 recipients
-                                        </span>
-                                        <span style="display: inline-flex; align-items: center; gap: 0.25rem;">
-                                            SMS • Email • Push
                                         </span>
                                     </div>
                                 </div>
@@ -902,12 +916,12 @@
         </main>
 
         <!-- Footer -->
-        <footer style="border-top: 1px solid rgba(30, 74, 122, 0.12); margin-top: 3rem; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); position: relative; z-index: 10;">
-            <div style="max-width: 1280px; margin: 0 auto; padding: 2rem 1rem;">
-                <div id="footerFlex" style="display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 1rem;">
+        <footer style="border-top: 1px solid rgba(30, 74, 122, 0.12); margin-top: 2rem; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(8px); position: relative; z-index: 10;">
+            <div style="max-width: 1280px; margin: 0 auto; padding: 1.5rem 1rem;">
+                <div class="footer-content">
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <img src="images/logo.png" 
-                             alt="Smart Flood Logo" style="width: 40px; height: 40px;">
+                             alt="Smart Flood Logo" style="width: 40px; height: 40px; flex-shrink: 0;">
                         <div>
                             <p style="margin: 0; font-size: 0.875rem;">© 2025 Smart Flood Detection System</p>
                             <p style="margin: 0; font-size: 0.75rem; color: var(--muted-foreground);">National University - Lipa</p>
@@ -923,55 +937,7 @@
     </div>
 
     <script>
-        // Global map variable
-        let map = null;
-        let markers = [];
-
-        // Tab Navigation
-        function switchTab(tabName) {
-            // Hide all tabs
-            const tabs = ['dashboard', 'map', 'predictions', 'alerts'];
-            tabs.forEach(tab => {
-                document.getElementById(`${tab}-tab`).classList.add('hidden');
-                document.getElementById(`nav-${tab}`).classList.remove('active');
-                // Also update mobile nav buttons
-                const mobileButtons = document.querySelectorAll('.nav-mobile button');
-                mobileButtons.forEach(btn => {
-                    if (btn.textContent.toLowerCase().includes(tab)) {
-                        btn.classList.remove('active');
-                    }
-                });
-            });
-
-            // Show selected tab
-            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
-            document.getElementById(`nav-${tabName}`).classList.add('active');
-
-            // Update icons
-            feather.replace();
-
-            // Initialize charts or map if needed
-            if (tabName === 'dashboard') {
-                initDashboardCharts();
-            } else if (tabName === 'predictions') {
-                initPredictionCharts();
-            } else if (tabName === 'map') {
-                // Render sensor list and initialize map
-                renderAllSensors();
-                setTimeout(() => {
-                    initLeafletMap();
-                }, 100);
-            }
-        }
-
-        // Mobile Menu Toggle
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
-            feather.replace();
-        }
-
-        // Sensor Data - Updated for Lipa, Batangas area
+        // Sensor Data
         const sensors = [
             { id: 1, name: 'San Jose River Station', status: 'online', waterLevel: 2.8, riskLevel: 'high', lat: 13.9411, lng: 121.1634 },
             { id: 2, name: 'Santa Cruz Bridge', status: 'online', waterLevel: 1.9, riskLevel: 'medium', lat: 13.9475, lng: 121.1580 },
@@ -982,6 +948,90 @@
             { id: 7, name: 'Market Area Station', status: 'online', waterLevel: 2.4, riskLevel: 'high', lat: 13.9320, lng: 121.1580 }
         ];
 
+        const predictions = [
+            { location: 'Barangay San Jose', risk: 'high', probability: 87 },
+            { location: 'Barangay Santa Cruz', risk: 'medium', probability: 62 },
+            { location: 'Barangay Poblacion', risk: 'high', probability: 78 },
+            { location: 'Barangay Riverside', risk: 'low', probability: 34 },
+            { location: 'Barangay Central', risk: 'medium', probability: 55 }
+        ];
+
+        // Global variables
+        let map = null;
+        let markers = [];
+        let rainfallChart, waterLevelChart, forecastChart;
+
+        // Tab Navigation
+        function switchTab(tabName) {
+            const tabs = ['dashboard', 'map', 'predictions', 'alerts'];
+            tabs.forEach(tab => {
+                document.getElementById(`${tab}-tab`).classList.add('hidden');
+                const navBtn = document.getElementById(`nav-${tab}`);
+                if (navBtn) navBtn.classList.remove('active');
+                
+                // Update mobile nav
+                const mobileButtons = document.querySelectorAll('.nav-mobile button');
+                mobileButtons.forEach(btn => {
+                    if (btn.textContent.toLowerCase().includes(tab.replace('-', ' '))) {
+                        btn.classList.remove('active');
+                    }
+                });
+            });
+
+            document.getElementById(`${tabName}-tab`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            feather.replace();
+
+            if (tabName === 'dashboard') {
+                renderPredictions();
+                initDashboardCharts();
+            } else if (tabName === 'predictions') {
+                initPredictionCharts();
+            } else if (tabName === 'map') {
+                renderAllSensors();
+                setTimeout(() => initLeafletMap(), 100);
+            }
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+            feather.replace();
+        }
+
+        // Render predictions list
+        function renderPredictions() {
+            const container = document.getElementById('predictionsList');
+            if (!container) return;
+
+            const html = predictions.map(p => {
+                const riskClass = p.risk === 'high' ? 'high' : p.risk === 'medium' ? 'medium' : 'low';
+                const barColor = p.risk === 'high' ? '#e53935' : p.risk === 'medium' ? '#ffc107' : '#8bc34a';
+                
+                return `
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem; padding: 1rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 0.5rem;">
+                            <h4 style="margin: 0; font-size: 0.9375rem;">${p.location}</h4>
+                            <span class="risk-badge ${riskClass}" style="font-size: 0.75rem; padding: 0.25rem 0.625rem;">
+                                ${p.risk.toUpperCase()} RISK
+                            </span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="flex: 1; height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden;">
+                                <div style="height: 100%; width: ${p.probability}%; background: ${barColor}; transition: width 0.5s ease;"></div>
+                            </div>
+                            <span style="font-size: 0.875rem; font-weight: 600; min-width: 45px;">${p.probability}%</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+
+        // Sensor selection
         function selectSensor(sensorId) {
             const sensor = sensors.find(s => s.id === sensorId);
             if (!sensor) return;
@@ -991,26 +1041,24 @@
             
             descP.textContent = 'Selected sensor information';
 
-            const riskBadgeClass = sensor.riskLevel === 'high' ? 'high' : sensor.riskLevel === 'medium' ? 'medium' : 'low';
-            const statusBadge = sensor.status === 'online' 
-                ? '<span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: rgba(0, 188, 212, 0.2); color: var(--secondary); border-radius: 9999px; font-size: 0.75rem; font-weight: 500;"><i data-feather="wifi" style="width: 12px; height: 12px;"></i> online</span>'
-                : '<span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.75rem; background: rgba(0, 0, 0, 0.1); color: var(--muted-foreground); border-radius: 9999px; font-size: 0.75rem; font-weight: 500;"><i data-feather="wifi-off" style="width: 12px; height: 12px;"></i> offline</span>';
-
-            const riskBadge = `<span class="risk-badge ${riskBadgeClass}" style="font-size: 0.75rem;">${sensor.riskLevel.toUpperCase()} RISK</span>`;
-            
+            const riskBadgeClass = sensor.riskLevel;
+            const statusIcon = sensor.status === 'online' ? 'wifi' : 'wifi-off';
             const waterLevelPercent = sensor.waterLevel > 0 ? Math.min((sensor.waterLevel / 2.5) * 100, 100) : 0;
             const progressColor = sensor.riskLevel === 'high' ? '#e53935' : sensor.riskLevel === 'medium' ? '#ffc107' : '#8bc34a';
 
             detailsDiv.innerHTML = `
                 <div style="margin-bottom: 1rem;">
-                    <h4 style="margin: 0 0 0.75rem 0;">${sensor.name}</h4>
-                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
-                        ${statusBadge}
-                        ${riskBadge}
+                    <h4 style="margin: 0 0 0.75rem 0; font-size: 1rem;">${sensor.name}</h4>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <span class="risk-badge ${riskBadgeClass}" style="font-size: 0.75rem;">${sensor.riskLevel.toUpperCase()}</span>
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.625rem; background: ${sensor.status === 'online' ? 'rgba(0, 188, 212, 0.15)' : 'rgba(0,0,0,0.05)'}; color: ${sensor.status === 'online' ? 'var(--secondary)' : 'var(--muted-foreground)'}; border-radius: 9999px; font-size: 0.75rem;">
+                            <i data-feather="${statusIcon}" style="width: 12px; height: 12px;"></i>
+                            ${sensor.status}
+                        </span>
                     </div>
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1rem;">
                     <div style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(30, 74, 122, 0.12);">
                         <span style="font-size: 0.875rem; color: var(--muted-foreground);">Water Level</span>
                         <span style="font-weight: 600;">${sensor.waterLevel.toFixed(1)}m</span>
@@ -1022,27 +1070,12 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(30, 74, 122, 0.12);">
-                        <span style="font-size: 0.875rem; color: var(--muted-foreground);">Normal Level</span>
-                        <span style="font-weight: 600; color: #8bc34a;">1.5m</span>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(30, 74, 122, 0.12);">
-                        <span style="font-size: 0.875rem; color: var(--muted-foreground);">Coordinates</span>
-                        <span style="font-size: 0.75rem; font-family: monospace;">${sensor.lat.toFixed(4)}°, ${sensor.lng.toFixed(4)}°</span>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(30, 74, 122, 0.12);">
-                        <span style="font-size: 0.875rem; color: var(--muted-foreground);"><i data-feather="clock" style="width: 12px; height: 12px; display: inline; vertical-align: middle;"></i> Last Update</span>
-                        <span style="font-size: 0.875rem;">2 min ago</span>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(30, 74, 122, 0.12);">
                         <span style="font-size: 0.875rem; color: var(--muted-foreground);">Sensor ID</span>
                         <span style="font-size: 0.75rem; background: var(--muted); padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-family: monospace;">SFD-${sensor.id}</span>
                     </div>
                 </div>
 
-                <div style="margin-top: 1rem;">
+                <div>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
                         <span style="color: var(--muted-foreground);">Water Level Progress</span>
                         <span style="font-weight: 600;">${waterLevelPercent.toFixed(0)}%</span>
@@ -1056,27 +1089,9 @@
                     <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(229, 57, 53, 0.1); border: 1px solid rgba(229, 57, 53, 0.3); border-radius: 0.5rem;">
                         <div style="display: flex; align-items: start; gap: 0.5rem;">
                             <i data-feather="alert-triangle" style="width: 16px; height: 16px; color: #e53935; flex-shrink: 0; margin-top: 0.125rem;"></i>
-                            <div>
-                                <p style="margin: 0 0 0.25rem 0; font-size: 0.875rem; font-weight: 600; color: #e53935;">Critical Warning</p>
-                                <p style="margin: 0; font-size: 0.875rem; color: #c62828;">
-                                    Water level is ${sensor.waterLevel.toFixed(1)}m (${((sensor.waterLevel - 2.5) * 100).toFixed(0)}cm above threshold). 
-                                    Residents should prepare for possible evacuation.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                ` : ''}
-
-                ${sensor.status === 'offline' ? `
-                    <div style="margin-top: 1rem; padding: 0.75rem; background: var(--muted); border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
-                        <div style="display: flex; align-items: start; gap: 0.5rem;">
-                            <i data-feather="wifi-off" style="width: 16px; height: 16px; color: var(--muted-foreground); flex-shrink: 0; margin-top: 0.125rem;"></i>
-                            <div>
-                                <p style="margin: 0 0 0.25rem 0; font-size: 0.875rem; font-weight: 600; color: var(--muted-foreground);">Sensor Offline</p>
-                                <p style="margin: 0; font-size: 0.875rem; color: var(--muted-foreground);">
-                                    This sensor is currently offline. Last known data may not be current.
-                                </p>
-                            </div>
+                            <p style="margin: 0; font-size: 0.875rem; color: #c62828;">
+                                <strong>Critical Warning:</strong> Water level ${((sensor.waterLevel - 2.5) * 100).toFixed(0)}cm above threshold. Prepare for evacuation.
+                            </p>
                         </div>
                     </div>
                 ` : ''}
@@ -1084,111 +1099,60 @@
 
             feather.replace();
 
-            // Pan map to sensor if map is initialized
             if (map) {
                 map.setView([sensor.lat, sensor.lng], 15, { animate: true });
-                // Open popup for selected marker
                 const marker = markers.find(m => m.sensorId === sensor.id);
-                if (marker) {
-                    marker.leafletMarker.openPopup();
-                }
+                if (marker) marker.leafletMarker.openPopup();
             }
         }
 
-        // Render All Sensors list in Map tab
+        // Render all sensors list
         function renderAllSensors() {
             const container = document.getElementById('allSensorsList');
             if (!container) return;
 
-            const riskBadge = (level) => {
-                const cls = level === 'high' ? 'high' : level === 'medium' ? 'medium' : 'low';
-                return `<span class="risk-badge ${cls}" style="font-size: 0.75rem;">${level.toUpperCase()}</span>`;
-            };
-
-            const statusBadge = (status) => {
-                return status === 'online'
-                    ? '<span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: rgba(0, 188, 212, 0.15); color: var(--secondary); border-radius: 9999px; font-size: 0.75rem;"><i data-feather="wifi" style="width: 12px; height: 12px;"></i> online</span>'
-                    : '<span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; background: rgba(0,0,0,0.05); color: var(--muted-foreground); border-radius: 9999px; font-size: 0.75rem;"><i data-feather="wifi-off" style="width: 12px; height: 12px;"></i> offline</span>';
-            };
-
-            const rows = sensors.map(s => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
-                    <div style="display: flex; flex-direction: column; gap: 0.375rem;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <strong>${s.name}</strong>
-                            ${statusBadge(s.status)}
-                            ${riskBadge(s.riskLevel)}
-                        </div>
-                        <div style="font-size: 0.875rem; color: var(--muted-foreground); display: flex; gap: 1rem; flex-wrap: wrap;">
-                            <span>Water Level: <strong>${s.waterLevel.toFixed(1)}m</strong></span>
-                            <span>Coords: <span style="font-family: monospace;">${s.lat.toFixed(4)}°, ${s.lng.toFixed(4)}°</span></span>
-                        </div>
+            const html = sensors.map(s => `
+                <div style="display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; border: 1px solid rgba(30, 74, 122, 0.12); border-radius: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 0.5rem;">
+                        <strong style="font-size: 0.9375rem;">${s.name}</strong>
+                        <span class="risk-badge ${s.riskLevel}" style="font-size: 0.75rem; padding: 0.25rem 0.625rem;">${s.riskLevel.toUpperCase()}</span>
                     </div>
-                    <div>
-                        <button onclick="selectSensor(${s.id})" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <span style="font-size: 0.875rem; color: var(--muted-foreground);">${s.status === 'online' ? `${s.waterLevel.toFixed(1)}m` : 'Offline'}</span>
+                        <button onclick="selectSensor(${s.id})" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-size: 0.875rem; min-height: 36px;">
                             View Details
                         </button>
                     </div>
                 </div>
             `).join('');
-
-            container.innerHTML = rows;
-            feather.replace();
+            
+            container.innerHTML = html;
         }
 
         // Initialize Leaflet Map
         function initLeafletMap() {
-            if (map) return; // Already initialized
+            if (map) return;
 
             const mapElement = document.getElementById('leafletMap');
             if (!mapElement) return;
 
-            // Create map centered on Lipa, Batangas (limit interactions to avoid blocking page scroll)
             map = L.map('leafletMap', {
-                scrollWheelZoom: false,
-                touchZoom: false,
-                dragging: false,
-                keyboard: false,
-                doubleClickZoom: false,
-                boxZoom: false
+                scrollWheelZoom: true,
+                touchZoom: true,
+                dragging: true
             }).setView([13.9411, 121.1634], 13);
 
-            // Add OpenStreetMap tiles
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
             }).addTo(map);
 
-            // Keep Leaflet's default click handling so popups and close buttons work
-
-            // Add sensor markers
             sensors.forEach(sensor => {
-                const riskColors = {
-                    high: '#e53935',
-                    medium: '#ffc107',
-                    low: '#8bc34a'
-                };
+                const riskColors = { high: '#e53935', medium: '#ffc107', low: '#8bc34a' };
+                const pulseAnimation = sensor.riskLevel === 'high' && sensor.status === 'online' ? 'animation: marker-pulse 2s infinite;' : '';
 
-                const pulseAnimation = sensor.riskLevel === 'high' && sensor.status === 'online' 
-                    ? 'animation: marker-pulse 2s infinite;' 
-                    : '';
-
-                // Create custom icon
                 const iconHtml = `
-                    <div style="
-                        width: 40px;
-                        height: 40px;
-                        border-radius: 50%;
-                        background: ${riskColors[sensor.riskLevel]};
-                        border: 3px solid ${sensor.status === 'offline' ? '#999' : '#fff'};
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        cursor: pointer;
-                        ${pulseAnimation}
-                        opacity: ${sensor.status === 'offline' ? '0.5' : '1'};
-                    ">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${riskColors[sensor.riskLevel]}; border: 3px solid ${sensor.status === 'offline' ? '#999' : '#fff'}; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; cursor: pointer; ${pulseAnimation} opacity: ${sensor.status === 'offline' ? '0.5' : '1'};">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                             <circle cx="12" cy="10" r="3"></circle>
@@ -1207,67 +1171,26 @@
                 const marker = L.marker([sensor.lat, sensor.lng], { icon: customIcon })
                     .addTo(map)
                     .bindPopup(`
-                        <div style="font-family: system-ui, sans-serif; min-width: 200px;">
-                            <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #1e4a7a;">
-                                ${sensor.name}
-                            </h3>
+                        <div style="font-family: system-ui, sans-serif; min-width: 180px;">
+                            <h3 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600; color: #1e4a7a;">${sensor.name}</h3>
                             <div style="font-size: 12px; color: #546e7a; line-height: 1.6;">
-                                <p style="margin: 4px 0;">
-                                    <strong>Status:</strong> 
-                                    <span style="color: ${sensor.status === 'online' ? '#8bc34a' : '#999'};">
-                                        ${sensor.status}
-                                    </span>
-                                </p>
-                                <p style="margin: 4px 0;">
-                                    <strong>Water Level:</strong> ${sensor.waterLevel.toFixed(1)}m
-                                </p>
-                                <p style="margin: 4px 0;">
-                                    <strong>Risk:</strong> 
-                                    <span style="color: ${riskColors[sensor.riskLevel]}; text-transform: uppercase; font-weight: 600;">
-                                        ${sensor.riskLevel}
-                                    </span>
-                                </p>
+                                <p style="margin: 4px 0;"><strong>Status:</strong> <span style="color: ${sensor.status === 'online' ? '#8bc34a' : '#999'};">${sensor.status}</span></p>
+                                <p style="margin: 4px 0;"><strong>Water Level:</strong> ${sensor.waterLevel.toFixed(1)}m</p>
+                                <p style="margin: 4px 0;"><strong>Risk:</strong> <span style="color: ${riskColors[sensor.riskLevel]}; text-transform: uppercase; font-weight: 600;">${sensor.riskLevel}</span></p>
                             </div>
-                            <button 
-                                onclick="selectSensor(${sensor.id})"
-                                style="
-                                    margin-top: 8px;
-                                    width: 100%;
-                                    padding: 6px 12px;
-                                    background: linear-gradient(135deg, #1e4a7a, #00bcd4);
-                                    color: white;
-                                    border: none;
-                                    border-radius: 4px;
-                                    cursor: pointer;
-                                    font-size: 12px;
-                                    font-weight: 500;
-                                "
-                            >
-                                View Details
-                            </button>
+                            <button onclick="selectSensor(${sensor.id})" style="margin-top: 8px; width: 100%; padding: 8px 12px; background: linear-gradient(135deg, #1e4a7a, #00bcd4); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;">View Details</button>
                         </div>
                     `)
-                    .on('click', () => {
-                        selectSensor(sensor.id);
-                    });
+                    .on('click', () => selectSensor(sensor.id));
 
                 markers.push({ sensorId: sensor.id, leafletMarker: marker });
             });
 
-            // Map is permanently non-interactive by design to allow page scroll.
-            // Users can still view details via the All Sensors list; selectSensor() will pan programmatically.
-
-            // Force resize after a short delay
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 200);
+            setTimeout(() => map.invalidateSize(), 200);
         }
 
-        // Chart Initialization
-        let rainfallChart, waterLevelChart, forecastChart;
-
+        // Chart initialization
         function initDashboardCharts() {
-            // Rainfall Chart
             const rainfallCtx = document.getElementById('rainfallChart');
             if (rainfallCtx && !rainfallChart) {
                 rainfallChart = new Chart(rainfallCtx, {
@@ -1280,44 +1203,27 @@
                             borderColor: '#00bcd4',
                             backgroundColor: 'rgba(0, 188, 212, 0.1)',
                             tension: 0.4,
-                            borderWidth: 3,
-                            pointRadius: 4,
-                            pointBackgroundColor: '#00bcd4'
+                            borderWidth: 2,
+                            pointRadius: 3
                         }, {
                             label: 'Forecast',
                             data: [3.1, 4.2, 6.5, 9.2, 14.8, 18.5, 13.2, 8.4],
                             borderColor: '#8bc34a',
-                            backgroundColor: 'rgba(139, 195, 74, 0.1)',
+                            borderDash: [5, 5],
                             tension: 0.4,
                             borderWidth: 2,
-                            borderDash: [5, 5],
-                            pointRadius: 3,
-                            pointBackgroundColor: '#8bc34a'
+                            pointRadius: 2
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'mm/hr'
-                                }
-                            }
-                        }
+                        plugins: { legend: { position: 'top', labels: { boxWidth: 20, padding: 10 } } },
+                        scales: { y: { beginAtZero: true } }
                     }
                 });
             }
 
-            // Water Level Chart
             const waterLevelCtx = document.getElementById('waterLevelChart');
             if (waterLevelCtx && !waterLevelChart) {
                 waterLevelChart = new Chart(waterLevelCtx, {
@@ -1336,29 +1242,16 @@
                             label: 'Threshold',
                             data: [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5],
                             borderColor: '#e53935',
-                            borderWidth: 2,
                             borderDash: [5, 5],
+                            borderWidth: 2,
                             pointRadius: 0
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: {
-                                    display: true,
-                                    text: 'meters'
-                                }
-                            }
-                        }
+                        plugins: { legend: { position: 'top', labels: { boxWidth: 20, padding: 10 } } },
+                        scales: { y: { beginAtZero: true } }
                     }
                 });
             }
@@ -1379,39 +1272,21 @@
                             tension: 0.4,
                             borderWidth: 2,
                             borderDash: [5, 5],
-                            pointRadius: 4,
-                            pointBackgroundColor: '#e53935'
+                            pointRadius: 3
                         }, {
                             label: 'Actual Risk',
                             data: [62, null, null, null, null, null],
                             borderColor: '#2563eb',
-                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                            tension: 0.4,
-                            borderWidth: 3,
-                            pointRadius: 5,
-                            pointBackgroundColor: '#2563eb',
+                            borderWidth: 2,
+                            pointRadius: 4,
                             spanGaps: false
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: true,
-                                position: 'top'
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 100,
-                                title: {
-                                    display: true,
-                                    text: 'Risk %'
-                                }
-                            }
-                        }
+                        plugins: { legend: { position: 'top', labels: { boxWidth: 20, padding: 10 } } },
+                        scales: { y: { beginAtZero: true, max: 100 } }
                     }
                 });
             }
@@ -1420,18 +1295,14 @@
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
             feather.replace();
+            renderPredictions();
             initDashboardCharts();
         });
 
-        // Handle window resize for map
+        // Handle resize for map
         window.addEventListener('resize', () => {
-            if (map) {
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 200);
-            }
+            if (map) setTimeout(() => map.invalidateSize(), 200);
         });
     </script>
-    
-  </body>
-  </html>
+</body>
+</html>
