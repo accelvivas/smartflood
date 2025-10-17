@@ -57,6 +57,33 @@ export default function Home() {
           ))}
         </CardContent>
       </Card>
+
+      {/* Evacuation Suggestions (Residents) */}
+      <Card className="border-l-4 border-l-green-500 shadow-md">
+        <CardHeader>
+          <CardTitle>Evacuation Suggestions</CardTitle>
+          <CardDescription>Nearby evacuation centers and suggested options</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[
+            { name: "San Jose Gymnasium", address: "Brgy San Jose, Lipa", capacity: 300, distanceKm: 1.2 },
+            { name: "Central Elementary School", address: "Brgy Poblacion, Lipa", capacity: 450, distanceKm: 2.9 },
+            { name: "Riverside Covered Court", address: "Brgy Riverside, Lipa", capacity: 220, distanceKm: 3.5 },
+          ].map((c, i) => (
+            <div key={i} className="p-4 border rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{c.name}</p>
+                  <p className="text-sm text-muted-foreground">{c.address}</p>
+                </div>
+                <p className="text-sm text-muted-foreground">{c.distanceKm} km</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Approx. capacity: {c.capacity} people</p>
+            </div>
+          ))}
+          <p className="text-xs text-muted-foreground">Note: Sample data. Provide official center list to replace these placeholders.</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

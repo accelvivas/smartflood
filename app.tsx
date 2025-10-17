@@ -12,6 +12,7 @@ import Settings from "./components/settings";
 import { getCurrentUser, logout, seedIfEmpty } from "./components/data";
 import type { Role } from "./components/data";
 import { Button } from "./components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { 
   LayoutDashboard, 
@@ -111,18 +112,6 @@ export default function App() {
               Home
             </Button>
             <Button
-              variant={activeTab === "dashboard" ? "default" : "ghost"}
-              onClick={() => setActiveTab("dashboard")}
-              className={`gap-2 transition-all ${
-                activeTab === "dashboard" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
-                  : "hover:bg-white/60"
-              }`}
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Dashboard
-            </Button>
-            <Button
               variant={activeTab === "map" ? "default" : "ghost"}
               onClick={() => setActiveTab("map")}
               className={`gap-2 transition-all ${
@@ -133,18 +122,6 @@ export default function App() {
             >
               <Map className="h-4 w-4" />
               Map View
-            </Button>
-            <Button
-              variant={activeTab === "predictions" ? "default" : "ghost"}
-              onClick={() => setActiveTab("predictions")}
-              className={`gap-2 transition-all ${
-                activeTab === "predictions" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
-                  : "hover:bg-white/60"
-              }`}
-            >
-              <Brain className="h-4 w-4" />
-              Predictions
             </Button>
             <Button
               variant={activeTab === "alerts" ? "default" : "ghost"}
@@ -158,44 +135,21 @@ export default function App() {
               <Bell className="h-4 w-4" />
               Alerts
             </Button>
-            {canAdmin && (
-              <Button
-                variant={activeTab === "admin" ? "default" : "ghost"}
-                onClick={() => setActiveTab("admin")}
-                className={`gap-2 transition-all ${
-                  activeTab === "admin" 
-                    ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
-                    : "hover:bg-white/60"
-                }`}
-              >
-                <Shield className="h-4 w-4" />
-                Admin
-              </Button>
-            )}
-            <Button
-              variant={activeTab === "reports" ? "default" : "ghost"}
-              onClick={() => setActiveTab("reports")}
-              className={`gap-2 transition-all ${
-                activeTab === "reports" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
-                  : "hover:bg-white/60"
-              }`}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Reports
-            </Button>
-            <Button
-              variant={activeTab === "settings" ? "default" : "ghost"}
-              onClick={() => setActiveTab("settings")}
-              className={`gap-2 transition-all ${
-                activeTab === "settings" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
-                  : "hover:bg-white/60"
-              }`}
-            >
-              <Shield className="h-4 w-4" />
-              Settings
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="gap-2">More</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setActiveTab("dashboard")}>Dashboard</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("predictions")}>Predictions</DropdownMenuItem>
+                {canAdmin && (
+                  <DropdownMenuItem onClick={() => setActiveTab("admin")}>Admin</DropdownMenuItem>
+                )}
+                <DropdownMenuItem onClick={() => setActiveTab("reports")}>Reports</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setActiveTab("settings")}>Settings</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { logout(); setUserRole(null); setUserName(""); setShowLanding(true); }}>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
         </div>
 
