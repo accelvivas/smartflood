@@ -1,8 +1,14 @@
-import { useState } from "react";
-import { Dashboard } from "./components/Dashboard";
-import { MapView } from "./components/MapView";
-import { Alerts } from "./components/Alerts";
-import { Predictions } from "./components/Predictions";
+import { useEffect, useMemo, useState } from "react";
+import { Dashboard } from "./components/dashboard";
+import { MapView } from "./components/mapview";
+import { Alerts } from "./components/alerts";
+import { Predictions } from "./components/predictions";
+import Auth from "./components/auth";
+import Landing from "./components/landing";
+import Admin from "./components/admin";
+import Reports from "./components/reports";
+import { getCurrentUser, logout, seedIfEmpty } from "./components/data";
+import type { Role } from "./components/data";
 import { Button } from "./components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { 
@@ -10,19 +16,50 @@ import {
   Map, 
   Bell, 
   Brain,
+  Shield,
+  FileSpreadsheet,
   Droplets,
   Menu,
   X,
   Waves
 } from "lucide-react";
-import logo from "figma:asset/9e2da856a2b32954d18206ce28c10daf7879487d.png";
+const logo = "/logo.png";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState<Role | null>(null);
+  const [userName, setUserName] = useState<string>("");
+  const [showLanding, setShowLanding] = useState(true);
+
+  useEffect(() => {
+    seedIfEmpty();
+    const u = getCurrentUser();
+    if (u) { setUserRole(u.role); setUserName(u.name); }
+  }, []);
+
+  const isAuthed = useMemo(() => !!userRole, [userRole]);
+  const canAdmin = useMemo(() => userRole === "admin" || userRole === "lgu", [userRole]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50/30">
+      <div className="decorative-bg" />
+      <div className="page-dim" />
+      {!isAuthed ? (
+        showLanding ? (
+          <Landing 
+            onGetStarted={() => setShowLanding(false)} 
+            onLogin={() => setShowLanding(false)} 
+            onSignup={() => setShowLanding(false)} 
+          />
+        ) : (
+          <Auth onBack={() => setShowLanding(true)} onAuthenticated={() => {
+            const u = getCurrentUser();
+            if (u) { setUserRole(u.role); setUserName(u.name); }
+          }} />
+        )
+      ) : (
+      <>
       {/* Decorative Background Elements */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-200/20 to-transparent rounded-full blur-3xl" />
@@ -38,6 +75,13 @@ export default function App() {
               <h2 className="text-xl text-primary">Smart Flood Detection</h2>
               <p className="text-xs text-muted-foreground">Philippine Monitoring System</p>
             </div>
+          </div>
+          <div className="hidden md:flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-sm">{userName}</p>
+              <p className="text-xs text-muted-foreground uppercase">{userRole}</p>
+            </div>
+            <Button variant="outline" onClick={() => { logout(); setUserRole(null); setUserName(""); }}>Logout</Button>
           </div>
           
           {/* Mobile Menu Toggle */}
@@ -100,6 +144,32 @@ export default function App() {
               <Bell className="h-4 w-4" />
               Alerts
             </Button>
+            {canAdmin && (
+              <Button
+                variant={activeTab === "admin" ? "default" : "ghost"}
+                onClick={() => setActiveTab("admin")}
+                className={`gap-2 transition-all ${
+                  activeTab === "admin" 
+                    ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                    : "hover:bg-white/60"
+                }`}
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
+            )}
+            <Button
+              variant={activeTab === "reports" ? "default" : "ghost"}
+              onClick={() => setActiveTab("reports")}
+              className={`gap-2 transition-all ${
+                activeTab === "reports" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                  : "hover:bg-white/60"
+              }`}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Reports
+            </Button>
           </nav>
         </div>
 
@@ -150,6 +220,30 @@ export default function App() {
               <Bell className="h-4 w-4" />
               Alerts
             </Button>
+            {canAdmin && (
+              <Button
+                variant={activeTab === "admin" ? "default" : "ghost"}
+                onClick={() => {
+                  setActiveTab("admin");
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full justify-start gap-2"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Button>
+            )}
+            <Button
+              variant={activeTab === "reports" ? "default" : "ghost"}
+              onClick={() => {
+                setActiveTab("reports");
+                setMobileMenuOpen(false);
+              }}
+              className="w-full justify-start gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Reports
+            </Button>
           </div>
         )}
       </header>
@@ -160,6 +254,8 @@ export default function App() {
         {activeTab === "map" && <MapView />}
         {activeTab === "predictions" && <Predictions />}
         {activeTab === "alerts" && <Alerts />}
+        {canAdmin && activeTab === "admin" && <Admin />}
+        {activeTab === "reports" && <Reports />}
       </main>
 
       {/* Footer */}
@@ -188,6 +284,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      </>) }
     </div>
   );
 }

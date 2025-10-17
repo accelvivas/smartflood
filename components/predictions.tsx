@@ -58,9 +58,9 @@ const forecastData = [
 export function Predictions() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1>ML Prediction Console</h1>
-        <p className="text-muted-foreground mt-1">
+      <div className="gradient-header">
+        <h1 className="text-white m-0">ML Prediction Console</h1>
+        <p className="text-white/90 m-0 mt-1">
           Machine learning model performance and flood forecasts
         </p>
       </div>
