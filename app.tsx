@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dashboard } from "./components/dashboard";
+import Home from "./components/home";
 import { MapView } from "./components/mapview";
 import { Alerts } from "./components/alerts";
 import { Predictions } from "./components/predictions";
@@ -7,6 +8,7 @@ import Auth from "./components/auth";
 import Landing from "./components/landing";
 import Admin from "./components/admin";
 import Reports from "./components/reports";
+import Settings from "./components/settings";
 import { getCurrentUser, logout, seedIfEmpty } from "./components/data";
 import type { Role } from "./components/data";
 import { Button } from "./components/ui/button";
@@ -26,7 +28,7 @@ import {
 const logo = "/logo.png";
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userRole, setUserRole] = useState<Role | null>(null);
   const [userName, setUserName] = useState<string>("");
@@ -97,11 +99,23 @@ export default function App() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-2 bg-muted/50 p-1.5 rounded-xl">
             <Button
+              variant={activeTab === "home" ? "default" : "ghost"}
+              onClick={() => setActiveTab("home")}
+              className={`gap-2 transition-all ${
+                activeTab === "home" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
+                  : "hover:bg-white/60"
+              }`}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Home
+            </Button>
+            <Button
               variant={activeTab === "dashboard" ? "default" : "ghost"}
               onClick={() => setActiveTab("dashboard")}
               className={`gap-2 transition-all ${
                 activeTab === "dashboard" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
                   : "hover:bg-white/60"
               }`}
             >
@@ -113,7 +127,7 @@ export default function App() {
               onClick={() => setActiveTab("map")}
               className={`gap-2 transition-all ${
                 activeTab === "map" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
                   : "hover:bg-white/60"
               }`}
             >
@@ -125,7 +139,7 @@ export default function App() {
               onClick={() => setActiveTab("predictions")}
               className={`gap-2 transition-all ${
                 activeTab === "predictions" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
                   : "hover:bg-white/60"
               }`}
             >
@@ -137,7 +151,7 @@ export default function App() {
               onClick={() => setActiveTab("alerts")}
               className={`gap-2 transition-all ${
                 activeTab === "alerts" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
                   : "hover:bg-white/60"
               }`}
             >
@@ -150,7 +164,7 @@ export default function App() {
                 onClick={() => setActiveTab("admin")}
                 className={`gap-2 transition-all ${
                   activeTab === "admin" 
-                    ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                    ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
                     : "hover:bg-white/60"
                 }`}
               >
@@ -163,12 +177,24 @@ export default function App() {
               onClick={() => setActiveTab("reports")}
               className={`gap-2 transition-all ${
                 activeTab === "reports" 
-                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
                   : "hover:bg-white/60"
               }`}
             >
               <FileSpreadsheet className="h-4 w-4" />
               Reports
+            </Button>
+            <Button
+              variant={activeTab === "settings" ? "default" : "ghost"}
+              onClick={() => setActiveTab("settings")}
+              className={`gap-2 transition-all ${
+                activeTab === "settings" 
+                  ? "bg-gradient-to-r from-primary to-primary/90 shadow-md text-white" 
+                  : "hover:bg-white/60"
+              }`}
+            >
+              <Shield className="h-4 w-4" />
+              Settings
             </Button>
           </nav>
         </div>
@@ -182,6 +208,17 @@ export default function App() {
                 <p className="text-xs text-muted-foreground uppercase">{userRole}</p>
               </div>
             </div>
+            <Button
+              variant={activeTab === "home" ? "default" : "ghost"}
+              onClick={() => {
+                setActiveTab("home");
+                setMobileMenuOpen(false);
+              }}
+              className="w-full justify-start gap-2"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Home
+            </Button>
             <Button
               variant={activeTab === "dashboard" ? "default" : "ghost"}
               onClick={() => {
@@ -250,6 +287,17 @@ export default function App() {
               <FileSpreadsheet className="h-4 w-4" />
               Reports
             </Button>
+            <Button
+              variant={activeTab === "settings" ? "default" : "ghost"}
+              onClick={() => {
+                setActiveTab("settings");
+                setMobileMenuOpen(false);
+              }}
+              className="w-full justify-start gap-2"
+            >
+              <Shield className="h-4 w-4" />
+              Settings
+            </Button>
             <div className="pt-2">
               <Button
                 variant="outline"
@@ -271,12 +319,14 @@ export default function App() {
 
       {/* Main Content */}
       <main className="container px-4 py-8 relative z-10">
+        {activeTab === "home" && <Home />}
         {activeTab === "dashboard" && <Dashboard />}
         {activeTab === "map" && <MapView />}
         {activeTab === "predictions" && <Predictions />}
         {activeTab === "alerts" && <Alerts />}
         {canAdmin && activeTab === "admin" && <Admin />}
         {activeTab === "reports" && <Reports />}
+        {activeTab === "settings" && <Settings />}
       </main>
 
       {/* Footer */}
