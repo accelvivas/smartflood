@@ -176,6 +176,12 @@ export default function App() {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t bg-background p-4 space-y-2">
+            <div className="flex items-center justify-between pb-2">
+              <div>
+                <p className="text-sm">{userName}</p>
+                <p className="text-xs text-muted-foreground uppercase">{userRole}</p>
+              </div>
+            </div>
             <Button
               variant={activeTab === "dashboard" ? "default" : "ghost"}
               onClick={() => {
@@ -244,6 +250,21 @@ export default function App() {
               <FileSpreadsheet className="h-4 w-4" />
               Reports
             </Button>
+            <div className="pt-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  logout();
+                  setUserRole(null);
+                  setUserName("");
+                  setMobileMenuOpen(false);
+                  setShowLanding(true);
+                }}
+              >
+                Logout
+              </Button>
+            </div>
           </div>
         )}
       </header>
